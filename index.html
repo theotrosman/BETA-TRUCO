@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Truco Argentino</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="game">
+<header>
+<h1>🎴 Truco Argentino</h1>
+<div id="score"><span id="playerScore">0 (0)</span> – <span id="cpuScore">0 (0)</span></div>
+<div id="gameInfo">
+<span id="roundInfo">Ronda 1</span> | 
+<span id="turnInfo">Esperando...</span>
+</div>
+</header>
+
+<section id="table">
+<div id="cpuArea" class="hand">
+<div class="player-label">CPU</div>
+</div>
+<div id="playArea">
+<div class="play-area-label">Mesa de Juego</div>
+</div>
+<div id="playerArea" class="hand">
+<div class="player-label">Tú</div>
+</div>
+</section>
+
+<!-- Botones contextuales para responder cantos -->
+<section id="cantoResponse" style="display:none; text-align:center; margin: 20px 0;"></section>
+
+<section id="actions">
+<button id="btnTruco" class="action-btn">🎯 Truco</button>
+<button id="btnEnvido" class="action-btn">🎲 Envido</button>
+<button id="btnFlor" class="action-btn">🌸 Flor</button>
+<button id="btnStart" class="start-btn">🚀 Nueva Ronda</button>
+</section>
+
+<section id="gameStatus">
+<div id="message">¡Bienvenido al Truco Argentino! Presiona "Nueva Ronda" para comenzar.</div>
+<div id="currentBets">
+<div id="trucoStatus" class="bet-status"></div>
+<div id="envidoStatus" class="bet-status"></div>
+<div id="florStatus" class="bet-status"></div>
+</div>
+</section>
+
+<section id="rules">
+<details>
+<summary>📖 Reglas del Juego</summary>
+<div class="rules-content">
+<h3>Objetivo</h3>
+<p>Ganar un número determinado de chicos (1, 2 ó 3) jugando a 30 puntos cada uno.</p>
+
+<h3>Valor de las Cartas (de mayor a menor)</h3>
+<ul>
+<li><strong>As de espadas</strong> (la mayor)</li>
+<li><strong>As de bastos</strong></li>
+<li><strong>Siete de espadas</strong> (manilla)</li>
+<li><strong>Siete de oros</strong> (manilla)</li>
+<li><strong>Treses</strong></li>
+<li><strong>Doses</strong></li>
+<li><strong>Ases falsos</strong> (oros y copas)</li>
+<li><strong>Doces, Onces, Dieces</strong></li>
+<li><strong>Sietes falsos</strong> (copas y bastos)</li>
+<li><strong>Seises, Cincos, Cuatros</strong></li>
+</ul>
+
+<h3>Apuestas</h3>
+<ul>
+<li><strong>Truco:</strong> 2 puntos | <strong>Retruco:</strong> 3 puntos | <strong>Vale cuatro:</strong> 4 puntos</li>
+<li><strong>Envido:</strong> 2 puntos | <strong>Real envido:</strong> 3 puntos | <strong>Falta:</strong> puntos variables</li>
+<li><strong>Flor:</strong> 3 puntos | <strong>Contra flor:</strong> 6 puntos | <strong>Contra flor al resto:</strong> puntos variables</li>
+</ul>
+</div>
+</details>
+</section>
+</main>
+<script src="main.js"></script>
+</body>
+</html>
