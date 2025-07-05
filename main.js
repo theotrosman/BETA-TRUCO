@@ -605,11 +605,19 @@ function endRound() {
         gameState.cpuChicos >= GAME_CONFIG.numChicos) {
         setTimeout(endGame, 3000);
     } else {
-        setTimeout(() => {
-            gameState.gamePhase = 'waiting';
-            elements.btnStart.textContent = 'Siguiente Ronda';
-            updateMessage();
-        }, 3000);
+        if (roundWinner === 'cpu') {
+            // Si la CPU gana la ronda, iniciar la siguiente ronda automáticamente
+            setTimeout(() => {
+                startNewGame();
+            }, 2000);
+        } else {
+            // Si gana el jugador, esperar que presione el botón
+            setTimeout(() => {
+                gameState.gamePhase = 'waiting';
+                elements.btnStart.textContent = 'Siguiente Ronda';
+                updateMessage();
+            }, 3000);
+        }
     }
 }
 
@@ -644,19 +652,65 @@ function endGame() {
 }
 
 // Utilidad para mostrar botones contextuales
+let cantoTimeout = null; // Timer para cantos de la CPU
+
 function mostrarBotonesCanto(opciones, onClick) {
     elements.cantoResponse.innerHTML = '';
     elements.cantoResponse.style.display = 'block';
+    // Si hay un timer previo, limpiarlo
+    if (cantoTimeout) {
+        clearTimeout(cantoTimeout);
+        cantoTimeout = null;
+    }
+    // Mostrar botones
     opciones.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt.text;
         btn.className = 'action-btn';
         btn.onclick = () => {
             elements.cantoResponse.style.display = 'none';
+            if (cantoTimeout) {
+                clearTimeout(cantoTimeout);
+                cantoTimeout = null;
+            }
             onClick(opt.value);
         };
         elements.cantoResponse.appendChild(btn);
     });
+    // Si el canto es de la CPU, iniciar temporizador de 10 segundos
+    if (cantoPendiente && cantoPendiente.quien === 'cpu') {
+        // Mostrar barra visual (opcional, reutiliza turnoBar)
+        const bar = elements.turnoBar;
+        bar.style.display = 'block';
+        const barInner = bar.querySelector('#turnoBarInner');
+        const barSeconds = bar.querySelector('#turnoBarSeconds');
+        let time = 10.0;
+        barInner.style.height = '100%';
+        barSeconds.textContent = '10s';
+        if (window.cantoBarInterval) clearInterval(window.cantoBarInterval);
+        window.cantoBarInterval = setInterval(() => {
+            time -= 0.1;
+            let percent = Math.max(0, time / 10.0);
+            barInner.style.height = (percent * 100) + '%';
+            barSeconds.textContent = Math.ceil(time) + 's';
+            if (percent <= 0) {
+                clearInterval(window.cantoBarInterval);
+            }
+        }, 100);
+        cantoTimeout = setTimeout(() => {
+            // Ocultar barra y botones
+            bar.style.display = 'none';
+            elements.cantoResponse.style.display = 'none';
+            clearInterval(window.cantoBarInterval);
+            cantoTimeout = null;
+            // Ejecutar automáticamente 'no quiero'
+            onClick('noquiero');
+        }, 10000);
+    } else {
+        // Si no es canto de la CPU, ocultar barra
+        elements.turnoBar.style.display = 'none';
+        if (window.cantoBarInterval) clearInterval(window.cantoBarInterval);
+    }
 }
 
 function ocultarBotonesCanto() {
