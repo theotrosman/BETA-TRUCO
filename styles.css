@@ -179,7 +179,7 @@ header h1 {
     border-color: #c0392b;
 }
 
-#actions {
+#actions, #actions2 {
     display: flex;
     justify-content: center;
     gap: 15px;
@@ -475,3 +475,7 @@ button:disabled {
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
     border-color: #FFD700;
 } 
+
+.oculto {
+    display: none !important;
+}

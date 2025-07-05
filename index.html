@@ -13,44 +13,48 @@
     <span id="volumeValue" style="min-width:30px; text-align:center;">50%</span>
 </div>
 <main id="game">
-<header>
-<h1>🎴 Truco Argentino</h1>
-<div id="score"><span id="playerScore">0 (0)</span> – <span id="cpuScore">0 (0)</span></div>
-<div id="gameInfo">
-<span id="roundInfo">Ronda 1</span> | 
-<span id="turnInfo">Esperando...</span>
-</div>
+<header id="header" class="oculto">
+    <h1>🎴 Truco Argentino</h1>
+    <div id="score"><span id="playerScore">0 (0)</span> – <span id="cpuScore">0 (0)</span></div>
+    <div id="gameInfo">
+    <span id="roundInfo">Ronda 1</span> | 
+    <span id="turnInfo">Esperando...</span>
+    </div>
 </header>
 
-<section id="table">
-<div id="cpuArea" class="hand">
-<div class="player-label">CPU</div>
-</div>
-<div id="playArea">
-<div class="play-area-label">Mesa de Juego</div>
-</div>
-<div id="playerArea" class="hand">
-<div class="player-label">Tú</div>
-</div>
+<section class="oculto" id="table">
+    <div id="cpuArea" class="hand">
+    <div class="player-label">CPU</div>
+    </div>
+    <div id="playArea">
+    <div class="play-area-label">Mesa de Juego</div>
+    </div>
+    <div id="playerArea" class="hand">
+    <div class="player-label">Tú</div>
+    </div>
 </section>
 
 <!-- Botones contextuales para responder cantos -->
 <section id="cantoResponse" style="display:none; text-align:center; margin: 20px 0;"></section>
 
-<section id="actions">
+<section id="actions" class="oculto">
 <button id="btnTruco" class="action-btn">🎯 Truco</button>
 <button id="btnEnvido" class="action-btn">🎲 Envido</button>
 <button id="btnFlor" class="action-btn">🌸 Flor</button>
-<button id="btnStart" class="start-btn">🚀 Nueva Ronda</button>
 </section>
 
+
 <section id="gameStatus">
-<div id="message">¡Bienvenido al Truco Argentino! Presiona "Nueva Ronda" para comenzar.</div>
-<div id="currentBets">
-<div id="trucoStatus" class="bet-status"></div>
-<div id="envidoStatus" class="bet-status"></div>
-<div id="florStatus" class="bet-status"></div>
-</div>
+    <div id="message">¡Bienvenido al Truco Argentino! Presiona "Nueva Ronda" para comenzar.</div>
+    <div id="currentBets">
+        <div id="trucoStatus" class="bet-status"></div>
+        <div id="envidoStatus" class="bet-status"></div>
+        <div id="florStatus" class="bet-status"></div>
+    </div>
+</section>
+
+<section id="actions2">
+    <button id="btnStart" class="start-btn">🚀 Nueva Ronda</button>
 </section>
 
 <section id="rules">

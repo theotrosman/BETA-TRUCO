@@ -90,7 +90,10 @@ let gameState = {
     hasFlor: false,
     cardsPlayed: [],
     roundWinner: null,
-    gamePhase: 'waiting'
+    gamePhase: 'waiting',
+    // Nuevas variables para controlar envido
+    envidoCantado: false, // Si ya se cantó envido en esta ronda
+    manoActual: 1 // Contador de manos en la ronda (1, 2, 3)
 };
 
 // Nuevo: Estado de canto pendiente
@@ -233,10 +236,20 @@ function startNewGameConMusica() {
     reproducirMusicaFondo();
     startNewGameOriginal();
 }
+
+// Configurar el botón de inicio
 elements.btnStart.onclick = startNewGameConMusica;
 
 function startNewGame() {
     console.log('Iniciando nueva ronda...');
+
+    // Remover clase oculto de todos los elementos
+    document.getElementById('header').classList.remove('oculto');
+    document.getElementById('table').classList.remove('oculto');
+    document.getElementById('actions').classList.remove('oculto');
+    // document.getElementById('gameStatus').classList.add('oculto');
+    document.getElementById('actions2').classList.add('oculto');
+    document.getElementById('rules').classList.add('oculto');
     
     buildDeck();
     shuffle(gameState.deck);
@@ -265,6 +278,9 @@ function startNewGame() {
     gameState.cardsPlayed = [];
     gameState.roundWinner = null;
     gameState.gamePhase = 'playing';
+    // Reiniciar variables de envido
+    gameState.envidoCantado = false;
+    gameState.manoActual = 1;
     
     console.log('Mano:', gameState.isPlayerMano ? 'Jugador' : 'CPU');
     console.log('Turno inicial:', gameState.turn === 0 ? 'Jugador' : 'CPU');
@@ -504,7 +520,14 @@ function evaluateTrick() {
     const winnerText = winner === 'player' ? 'TÚ' : 'LA CPU';
     pushGameMessage(`🏆 ${winnerText} GANÓ LA MANO (${gameState.playerTricks}-${gameState.cpuTricks})`);
     gameState.cardsPlayed = [];
+    gameState.manoActual++; // Incrementar contador de manos
     renderPlayArea();
+    
+    // Deshabilitar envido después de la primera mano
+    if (gameState.manoActual > 1) {
+        gameState.envidoCantado = true;
+    }
+    
     if (gameState.playerTricks >= 2 || gameState.cpuTricks >= 2 || 
         (gameState.playerHand.length === 0 && gameState.cpuHand.length === 0)) {
         setTimeout(endRound, 2000);
@@ -643,32 +666,65 @@ function ocultarBotonesCanto() {
 
 // --- Lógica de TRUCO ---
 function handleTruco() {
-    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || cantoPendiente) return;
-    if (cantoPendiente && cantoPendiente.quien === 'player') return;
-    if (gameState.trucoLevel >= 3) return;
+    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || cantoPendiente) {
+        console.log('No se puede cantar truco ahora');
+        return;
+    }
+    if (gameState.trucoLevel >= 3) {
+        console.log('Ya está en el nivel máximo de truco');
+        return;
+    }
+    
     gameState.trucoLevel++;
     gameState.gamePhase = 'truco';
     cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'player' };
+    
+    console.log('Jugador cantó truco - Nivel:', gameState.trucoLevel);
     pushGameMessage(`🎯 Cantaste ${getTrucoText()} - Esperando respuesta de la CPU...`);
     updateButtons();
+    
     // Asegurar SIEMPRE respuesta de la CPU
     setTimeout(() => cpuResponderTruco(), 2000);
 }
 
+// Función para evaluar la fuerza de una mano
+function evaluateHandStrength(hand) {
+    if (!hand || hand.length === 0) return 0;
+    
+    const powers = hand.map(card => getTrucoPower(card));
+    const maxPower = Math.max(...powers);
+    const avgPower = powers.reduce((sum, power) => sum + power, 0) / powers.length;
+    
+    // Normalizar el poder máximo (el máximo posible es 14 para el As de espadas)
+    const normalizedMax = maxPower / 14;
+    const normalizedAvg = avgPower / 14;
+    
+    // Combinar ambos factores
+    return (normalizedMax * 0.7) + (normalizedAvg * 0.3);
+}
+
 function cpuResponderTruco() {
     // Solo responder si hay un canto pendiente de truco
-    if (!cantoPendiente || cantoPendiente.tipo !== 'truco') return;
+    if (!cantoPendiente || cantoPendiente.tipo !== 'truco') {
+        console.log('No hay canto pendiente de truco');
+        return;
+    }
+    
     const fuerza = evaluateHandStrength(gameState.cpuHand);
-    if (gameState.trucoLevel < 3 && fuerza > 0.85 && Math.random() < 0.5) {
+    console.log('CPU evaluando truco - Fuerza:', fuerza, 'Nivel:', gameState.trucoLevel);
+    
+    // Decisión de la CPU basada en la fuerza de su mano
+    if (gameState.trucoLevel < 3 && fuerza > 0.7 && Math.random() < 0.6) {
+        // Subir el truco
         gameState.trucoLevel++;
         cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'cpu' };
         pushGameMessage(`CPU sube: ${getTrucoText()} - ¿Qué respondes?`);
         mostrarBotonesCanto([
             {text: 'Quiero', value: 'quiero'},
-            {text: gameState.trucoLevel < 3 ? 'Subir' : '', value: 'subir'},
             {text: 'No quiero', value: 'noquiero'}
-        ].filter(b=>b.text), respuestaTrucoJugador);
-    } else if (fuerza > 0.35 || Math.random() < 0.7) {
+        ], respuestaTrucoJugador);
+    } else if (fuerza > 0.3 || Math.random() < 0.8) {
+        // Aceptar el truco
         cantoPendiente = null;
         gameState.gamePhase = 'playing';
         pushGameMessage(`✅ CPU aceptó ${getTrucoText()}`);
@@ -677,6 +733,7 @@ function cpuResponderTruco() {
             setTimeout(cpuPlay, 2000);
         }
     } else {
+        // No querer el truco
         cantoPendiente = null;
         pushGameMessage(`❌ CPU no quiso ${getTrucoText()}`);
         sumarPuntosTruco('player');
@@ -686,6 +743,8 @@ function cpuResponderTruco() {
 
 function respuestaTrucoJugador(respuesta) {
     ocultarBotonesCanto();
+    console.log('Jugador responde truco:', respuesta);
+    
     if (respuesta === 'quiero') {
         cantoPendiente = null;
         gameState.gamePhase = 'playing';
@@ -695,11 +754,14 @@ function respuestaTrucoJugador(respuesta) {
             setTimeout(cpuPlay, 1000);
         }
     } else if (respuesta === 'subir') {
-        gameState.trucoLevel++;
-        cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'player' };
-        pushGameMessage(`Subís: ${getTrucoText()} - Esperando respuesta de la CPU...`);
-        setTimeout(() => cpuResponderTruco(), 2000);
-    } else {
+        // Solo permitir subir si la CPU cantó inicialmente (no si ya subió)
+        if (cantoPendiente && cantoPendiente.quien === 'cpu' && gameState.trucoLevel < 3) {
+            gameState.trucoLevel++;
+            cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'player' };
+            pushGameMessage(`Subís: ${getTrucoText()} - Esperando respuesta de la CPU...`);
+            setTimeout(() => cpuResponderTruco(), 2000);
+        }
+    } else if (respuesta === 'noquiero') {
         cantoPendiente = null;
         pushGameMessage(`❌ No quisiste ${getTrucoText()}`);
         sumarPuntosTruco('cpu');
@@ -717,10 +779,14 @@ function sumarPuntosTruco(ganador) {
 
 // --- CPU puede iniciar cantos aleatorios ---
 function cpuPuedeCantarTruco() {
-    if (gameState.gamePhase !== 'playing' || cantoPendiente) return;
+    if (gameState.gamePhase !== 'playing' || cantoPendiente) {
+        return false;
+    }
+    
     // Truco solo si no hay truco en curso
-    if (gameState.turn === 1 && gameState.trucoLevel === 0 && Math.random() < 0.18) {
+    if (gameState.turn === 1 && gameState.trucoLevel === 0 && Math.random() < 0.15) {
         gameState.trucoLevel = 1;
+        gameState.gamePhase = 'truco';
         cantoPendiente = { tipo: 'truco', nivel: 1, quien: 'cpu' };
         pushGameMessage(`CPU canta Truco - ¿Qué respondes?`);
         mostrarBotonesCanto([
@@ -730,40 +796,62 @@ function cpuPuedeCantarTruco() {
         ], respuestaTrucoJugador);
         return true;
     }
+    
     // CPU puede cantar retruco si ya hay truco aceptado
-    if (gameState.turn === 1 && gameState.trucoLevel === 1 && Math.random() < 0.10) {
+    if (gameState.turn === 1 && gameState.trucoLevel === 1 && Math.random() < 0.08) {
         gameState.trucoLevel = 2;
+        gameState.gamePhase = 'truco';
         cantoPendiente = { tipo: 'truco', nivel: 2, quien: 'cpu' };
         pushGameMessage(`CPU sube: Retruco - ¿Qué respondes?`);
         mostrarBotonesCanto([
             {text: 'Quiero', value: 'quiero'},
-            {text: gameState.trucoLevel < 3 ? 'Subir' : '', value: 'subir'},
             {text: 'No quiero', value: 'noquiero'}
-        ].filter(b=>b.text), respuestaTrucoJugador);
+        ], respuestaTrucoJugador);
         return true;
     }
-    // CPU puede cantar envido si no se cantó aún
-    if (gameState.turn === 1 && !gameState.hasEnvido && Math.random() < 0.12) {
+    
+    // CPU puede cantar vale cuatro si ya hay retruco aceptado
+    if (gameState.turn === 1 && gameState.trucoLevel === 2 && Math.random() < 0.05) {
+        gameState.trucoLevel = 3;
+        gameState.gamePhase = 'truco';
+        cantoPendiente = { tipo: 'truco', nivel: 3, quien: 'cpu' };
+        pushGameMessage(`CPU sube: Vale cuatro - ¿Qué respondes?`);
+        mostrarBotonesCanto([
+            {text: 'Quiero', value: 'quiero'},
+            {text: 'No quiero', value: 'noquiero'}
+        ], respuestaTrucoJugador);
+        return true;
+    }
+    
+    // CPU puede cantar envido si no se cantó aún y es la primera mano
+    if (gameState.turn === 1 && !gameState.hasEnvido && !gameState.envidoCantado && gameState.manoActual === 1 && Math.random() < 0.10) {
         gameState.envidoLevel = 1;
         gameState.hasEnvido = true;
+        gameState.envidoCantado = true; // Marcar que se cantó envido
         gameState.gamePhase = 'envido';
+        cantoPendiente = { tipo: 'envido', nivel: 1, quien: 'cpu' };
         pushGameMessage(`CPU canta Envido - ¿Qué respondes?`);
         mostrarBotonesCanto([
             {text: 'Quiero', value: 'quiero'},
+            {text: 'Subir', value: 'subir'},
             {text: 'No quiero', value: 'noquiero'}
         ], respuestaEnvidoJugador);
         return true;
     }
+    
     return false;
 }
 
 // --- Respuesta a envido de la CPU ---
 function respuestaEnvidoJugador(respuesta) {
     ocultarBotonesCanto();
+    console.log('Jugador responde envido:', respuesta);
+    
     if (respuesta === 'quiero') {
         const playerEnvido = calculateEnvido(gameState.playerHand);
         const cpuEnvido = calculateEnvido(gameState.cpuHand);
-        let puntosEnvido = 2;
+        let puntosEnvido = gameState.envidoLevel === 1 ? 2 : gameState.envidoLevel === 2 ? 3 : 30;
+        
         if (playerEnvido > cpuEnvido) {
             pushGameMessage(`🏆 Ganaste el envido (${playerEnvido} vs ${cpuEnvido})`);
             gameState.playerPoints += puntosEnvido;
@@ -783,9 +871,68 @@ function respuestaEnvidoJugador(respuesta) {
         gameState.gamePhase = 'playing';
         updateButtons();
         if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
-    } else {
+    } else if (respuesta === 'subir') {
+        // Subir el envido
+        if (gameState.envidoLevel < 3) {
+            gameState.envidoLevel++;
+            cantoPendiente = { tipo: 'envido', nivel: gameState.envidoLevel, quien: 'player' };
+            pushGameMessage(`Subís: ${getEnvidoText()} - Esperando respuesta de la CPU...`);
+            setTimeout(() => cpuResponderEnvido(), 2000);
+        }
+    } else if (respuesta === 'noquiero') {
         pushGameMessage('❌ No quisiste el envido');
         gameState.cpuPoints += 1;
+        updateScores();
+        gameState.gamePhase = 'playing';
+        updateButtons();
+        if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
+    }
+}
+
+// Función para que la CPU responda al envido
+function cpuResponderEnvido() {
+    if (!cantoPendiente || cantoPendiente.tipo !== 'envido') {
+        console.log('No hay canto pendiente de envido');
+        return;
+    }
+    
+    const cpuEnvido = calculateEnvido(gameState.cpuHand);
+    console.log('CPU evaluando envido - Valor:', cpuEnvido, 'Nivel:', gameState.envidoLevel);
+    
+    // Decisión de la CPU basada en su valor de envido
+    if (cpuEnvido >= 25 || Math.random() < 0.8) {
+        // Aceptar el envido
+        cantoPendiente = null;
+        gameState.gamePhase = 'playing';
+        pushGameMessage(`✅ CPU aceptó ${getEnvidoText()}`);
+        
+        // Resolver envido
+        const playerEnvido = calculateEnvido(gameState.playerHand);
+        let puntosEnvido = gameState.envidoLevel === 1 ? 2 : gameState.envidoLevel === 2 ? 3 : 30;
+        
+        if (playerEnvido > cpuEnvido) {
+            pushGameMessage(`🏆 Ganaste el envido (${playerEnvido} vs ${cpuEnvido})`);
+            gameState.playerPoints += puntosEnvido;
+        } else if (cpuEnvido > playerEnvido) {
+            pushGameMessage(`🏆 CPU ganó el envido (${cpuEnvido} vs ${playerEnvido})`);
+            gameState.cpuPoints += puntosEnvido;
+        } else {
+            if (gameState.isPlayerMano) {
+                pushGameMessage(`🤝 Empate en envido, ganas por ser mano (${playerEnvido})`);
+                gameState.playerPoints += puntosEnvido;
+            } else {
+                pushGameMessage(`🤝 Empate en envido, CPU gana por ser mano (${cpuEnvido})`);
+                gameState.cpuPoints += puntosEnvido;
+            }
+        }
+        updateScores();
+        updateButtons();
+        if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
+    } else {
+        // No querer el envido
+        cantoPendiente = null;
+        pushGameMessage(`❌ CPU no quiso ${getEnvidoText()}`);
+        gameState.playerPoints += 1;
         updateScores();
         gameState.gamePhase = 'playing';
         updateButtons();
@@ -796,27 +943,64 @@ function respuestaEnvidoJugador(respuesta) {
 // --- Deshabilitar botones de canto si hay canto pendiente ---
 function updateButtons() {
     const canPlay = gameState.gamePhase === 'playing' && gameState.turn === 0 && !cantoPendiente;
+    const canCantarEnvido = canPlay && !gameState.hasEnvido && !gameState.envidoCantado && gameState.manoActual === 1;
+    
     elements.btnTruco.disabled = !canPlay || gameState.trucoLevel >= 3;
-    elements.btnEnvido.disabled = !canPlay || gameState.hasEnvido;
+    elements.btnEnvido.disabled = !canCantarEnvido;
     elements.btnFlor.disabled = !canPlay || !GAME_CONFIG.allowFlor || gameState.hasFlor;
+    
+    // Debug: mostrar estado del envido
+    console.log('Estado envido:', {
+        canPlay,
+        hasEnvido: gameState.hasEnvido,
+        envidoCantado: gameState.envidoCantado,
+        manoActual: gameState.manoActual,
+        canCantarEnvido
+    });
 }
 
 // Funciones de apuestas
 function handleEnvido() {
-    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || gameState.hasEnvido || cantoPendiente) return;
+    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || gameState.hasEnvido || cantoPendiente) {
+        console.log('No se puede cantar envido ahora');
+        return;
+    }
+    
+    // Verificar restricciones de envido
+    if (gameState.envidoCantado) {
+        pushGameMessage('❌ Ya se cantó envido en esta ronda');
+        return;
+    }
+    
+    if (gameState.manoActual > 1) {
+        pushGameMessage('❌ Solo se puede cantar envido en la primera mano');
+        return;
+    }
+    
     gameState.envidoLevel++;
     gameState.hasEnvido = true;
+    gameState.envidoCantado = true; // Marcar que se cantó envido
     gameState.gamePhase = 'envido';
+    cantoPendiente = { tipo: 'envido', nivel: gameState.envidoLevel, quien: 'player' };
+    
     const playerEnvido = calculateEnvido(gameState.playerHand);
+    console.log('Jugador cantó envido - Nivel:', gameState.envidoLevel, 'Valor:', playerEnvido);
     pushGameMessage(`🎲 Cantaste ${getEnvidoText()} (Tú: ${playerEnvido}) - Esperando respuesta...`);
     updateButtons();
+    
     setTimeout(() => {
         const cpuEnvido = calculateEnvido(gameState.cpuHand);
-        const cpuAccepts = cpuEnvido >= 20;
-        if (cpuAccepts) {
+        console.log('CPU evaluando envido - Valor:', cpuEnvido);
+        
+        // Decisión de la CPU basada en su valor de envido
+        if (cpuEnvido >= 20 || Math.random() < 0.7) {
+            // Aceptar el envido
+            cantoPendiente = null;
+            gameState.gamePhase = 'playing';
             pushGameMessage(`✅ CPU aceptó ${getEnvidoText()} (CPU: ${cpuEnvido})`);
+            
             // Resolver envido
-            let puntosEnvido = 2; // Puedes ajustar según la apuesta
+            let puntosEnvido = gameState.envidoLevel === 1 ? 2 : gameState.envidoLevel === 2 ? 3 : 30;
             if (playerEnvido > cpuEnvido) {
                 pushGameMessage(`🏆 Ganaste el envido (${playerEnvido} vs ${cpuEnvido})`);
                 gameState.playerPoints += puntosEnvido;
@@ -834,14 +1018,17 @@ function handleEnvido() {
                 }
             }
             updateScores();
-            gameState.gamePhase = 'playing';
             updateButtons();
+            if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
         } else {
+            // No querer el envido
+            cantoPendiente = null;
             pushGameMessage(`❌ CPU no quiso el envido`);
             gameState.playerPoints += 1;
             updateScores();
             gameState.gamePhase = 'playing';
             updateButtons();
+            if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
         }
     }, 2000);
 }
@@ -984,7 +1171,7 @@ function updateMessage() {
         clearInterval(turnoBarInterval);
         clearTimeout(turnoTimeout);
     }
-    elements.roundInfo.textContent = `Ronda ${gameState.currentRound}`;
+    elements.roundInfo.textContent = `Ronda ${gameState.currentRound} - Mano ${gameState.manoActual}`;
     updateBetStatus();
 }
 
@@ -1139,5 +1326,6 @@ function startTurnTimeout() {
 
 // Inicialización
 console.log('Truco Argentino iniciado');
+gameState.gamePhase = 'waiting';
 updateMessage();
 updateButtons(); 
