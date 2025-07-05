@@ -5,6 +5,42 @@ const GAME_CONFIG = {
     allowFlor: true
 };
 
+// Verificación de recursos
+function verificarRecursos() {
+    console.log('🔍 Verificando recursos...');
+    
+    // Verificar audio
+    const audio = document.getElementById('musicaFondo');
+    if (audio) {
+        audio.addEventListener('error', () => {
+            console.error('❌ Error cargando audio: resources/musica/840rodrigo.mp3');
+        });
+        audio.addEventListener('canplaythrough', () => {
+            console.log('✅ Audio cargado correctamente');
+        });
+    }
+    
+    // Verificar algunas imágenes de prueba
+    const imagenesPrueba = [
+        './resources/cartas/1deespada.png',
+        './resources/cartas/dorsocard.png'
+    ];
+    
+    imagenesPrueba.forEach((src, index) => {
+        const img = new Image();
+        img.onload = () => {
+            console.log(`✅ Imagen ${index + 1} cargada: ${src}`);
+        };
+        img.onerror = () => {
+            console.error(`❌ Error cargando imagen ${index + 1}: ${src}`);
+        };
+        img.src = src;
+    });
+}
+
+// Ejecutar verificación cuando se carga la página
+document.addEventListener('DOMContentLoaded', verificarRecursos);
+
 // Palos y valores
 const SUITS = ['espada', 'basto', 'oro', 'copa'];
 const RANKS = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
@@ -268,10 +304,11 @@ function createCardElement(card, owner, clickable = false, index = null, isBack 
     palo = palo.replace(/\s/g, '');
     cardElement.setAttribute('data-tooltip', `${card.rank} de ${palo}`);
     // Imagen de la carta
-    const ruta = `resources/cartas/${card.rank}de${palo}.png`;
+    const ruta = `./resources/cartas/${card.rank}de${palo}.png`;
     const img = new Image();
     img.src = ruta;
     img.onerror = () => {
+        console.log('Error cargando imagen:', ruta);
         cardElement.textContent = `${card.rank} de ${palo}`;
     };
     img.onload = () => {
@@ -289,10 +326,15 @@ function createCardElement(card, owner, clickable = false, index = null, isBack 
             const backDiv = document.createElement('div');
             backDiv.className = 'card card-back';
             const backImg = new Image();
-            backImg.src = 'resources/cartas/dorsocard.png';
+            backImg.src = './resources/cartas/dorsocard.png';
             backImg.style.width = '100%';
             backImg.style.height = '100%';
             backImg.style.objectFit = 'cover';
+            backImg.onerror = () => {
+                console.log('Error cargando dorso de carta');
+                backDiv.style.background = '#e3e3e3';
+                backDiv.textContent = 'DORSO';
+            };
             backDiv.appendChild(backImg);
             cardContainer.appendChild(backDiv);
             // Evento flip
@@ -323,10 +365,15 @@ function renderHands() {
         const backDiv = document.createElement('div');
         backDiv.className = 'card cpu-card back';
         const backImg = new Image();
-        backImg.src = 'resources/cartas/dorsocard.png';
+        backImg.src = './resources/cartas/dorsocard.png';
         backImg.style.width = '100%';
         backImg.style.height = '100%';
         backImg.style.objectFit = 'cover';
+        backImg.onerror = () => {
+            console.log('Error cargando dorso de carta en mano CPU');
+            backDiv.style.background = '#e3e3e3';
+            backDiv.textContent = 'DORSO';
+        };
         backDiv.appendChild(backImg);
         cardContainer.appendChild(backDiv);
         elements.cpuArea.appendChild(cardContainer);
