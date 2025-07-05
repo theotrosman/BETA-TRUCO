@@ -106,6 +106,31 @@ elements.btnTruco.onclick = handleTruco;
 elements.btnEnvido.onclick = handleEnvido;
 elements.btnFlor.onclick = handleFlor;
 
+// Control de volumen
+const volumeSlider = document.getElementById('volumeSlider');
+const volumeValue = document.getElementById('volumeValue');
+
+volumeSlider.addEventListener('input', function() {
+    const volume = this.value / 100;
+    const audioElement = document.getElementById('musicaFondo');
+    if (audioElement) {
+        audioElement.volume = volume;
+        console.log('Volumen cambiado a:', volume); // Debug
+    } else {
+        console.log('Elemento de audio no encontrado'); // Debug
+    }
+    volumeValue.textContent = this.value + '%';
+});
+
+// Establecer volumen inicial
+document.addEventListener('DOMContentLoaded', function() {
+    const audioElement = document.getElementById('musicaFondo');
+    if (audioElement) {
+        audioElement.volume = 0.5; // 50% por defecto
+        console.log('Volumen inicial establecido en 0.5');
+    }
+});
+
 // --- HISTORIAL DE MENSAJES ---
 const MAX_MSG = 3;
 let gameMessages = [];
@@ -142,6 +167,37 @@ function shuffle(array) {
         [array[i], array[j]] = [array[j], array[i]];
     }
 }
+
+// --- MÚSICA DE FONDO AL INICIAR PRIMERA RONDA ---
+let musicaYaSono = false;
+function reproducirMusicaFondo() {
+    const audio = document.getElementById('musicaFondo');
+    if (!audio) {
+        console.log('Elemento de audio no encontrado en reproducirMusicaFondo');
+        return;
+    }
+    if (!musicaYaSono) {
+        // Asegurar que el volumen esté sincronizado con el slider
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider) {
+            audio.volume = volumeSlider.value / 100;
+        }
+        audio.currentTime = 57;
+        audio.play().catch((error) => {
+            console.log('Error reproduciendo audio:', error);
+        });
+        musicaYaSono = true;
+        console.log('Música iniciada con volumen:', audio.volume);
+    }
+}
+
+// Modificar startNewGame para llamar a la música
+const startNewGameOriginal = startNewGame;
+function startNewGameConMusica() {
+    reproducirMusicaFondo();
+    startNewGameOriginal();
+}
+elements.btnStart.onclick = startNewGameConMusica;
 
 function startNewGame() {
     console.log('Iniciando nueva ronda...');
@@ -548,17 +604,15 @@ function handleTruco() {
     cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'player' };
     pushGameMessage(`🎯 Cantaste ${getTrucoText()} - Esperando respuesta de la CPU...`);
     updateButtons();
-    // Respuesta inmediata de la CPU
-    cpuResponderTruco();
+    // Asegurar SIEMPRE respuesta de la CPU
+    setTimeout(() => cpuResponderTruco(), 2000);
 }
 
 function cpuResponderTruco() {
     // Solo responder si hay un canto pendiente de truco
     if (!cantoPendiente || cantoPendiente.tipo !== 'truco') return;
     const fuerza = evaluateHandStrength(gameState.cpuHand);
-    let respuesta = '';
-    // CPU SIEMPRE responde: si la mano es fuerte sube, si es media acepta, si es muy mala rechaza
-    if (gameState.trucoLevel < 3 && fuerza > 0.8) {
+    if (gameState.trucoLevel < 3 && fuerza > 0.85 && Math.random() < 0.5) {
         gameState.trucoLevel++;
         cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'cpu' };
         pushGameMessage(`CPU sube: ${getTrucoText()} - ¿Qué respondes?`);
@@ -567,19 +621,13 @@ function cpuResponderTruco() {
             {text: gameState.trucoLevel < 3 ? 'Subir' : '', value: 'subir'},
             {text: 'No quiero', value: 'noquiero'}
         ].filter(b=>b.text), respuestaTrucoJugador);
-        return;
-    } else if (fuerza > 0.4) {
-        respuesta = 'quiero';
-    } else {
-        respuesta = 'noquiero';
-    }
-    if (respuesta === 'quiero') {
+    } else if (fuerza > 0.35 || Math.random() < 0.7) {
         cantoPendiente = null;
         gameState.gamePhase = 'playing';
         pushGameMessage(`✅ CPU aceptó ${getTrucoText()}`);
         updateButtons();
         if (gameState.turn === 1) {
-            setTimeout(cpuPlay, 1000);
+            setTimeout(cpuPlay, 2000);
         }
     } else {
         cantoPendiente = null;
@@ -603,7 +651,7 @@ function respuestaTrucoJugador(respuesta) {
         gameState.trucoLevel++;
         cantoPendiente = { tipo: 'truco', nivel: gameState.trucoLevel, quien: 'player' };
         pushGameMessage(`Subís: ${getTrucoText()} - Esperando respuesta de la CPU...`);
-        cpuResponderTruco();
+        setTimeout(() => cpuResponderTruco(), 2000);
     } else {
         cantoPendiente = null;
         pushGameMessage(`❌ No quisiste ${getTrucoText()}`);
@@ -624,78 +672,50 @@ function sumarPuntosTruco(ganador) {
 function cpuPuedeCantarTruco() {
     if (gameState.gamePhase !== 'playing' || cantoPendiente) return;
     // Truco solo si no hay truco en curso
-    if (gameState.turn === 1 && gameState.trucoLevel === 0) {
-        // Si la mano es fuerte, canta truco
-        const fuerza = evaluateHandStrength(gameState.cpuHand);
-        if (fuerza > 0.7) {
-            gameState.trucoLevel = 1;
-            cantoPendiente = { tipo: 'truco', nivel: 1, quien: 'cpu' };
-            pushGameMessage(`CPU canta Truco - ¿Qué respondes?`);
-            mostrarBotonesCanto([
-                {text: 'Quiero', value: 'quiero'},
-                {text: 'Subir', value: 'subir'},
-                {text: 'No quiero', value: 'noquiero'}
-            ], respuestaTrucoJugador);
-            return true;
-        }
+    if (gameState.turn === 1 && gameState.trucoLevel === 0 && Math.random() < 0.18) {
+        gameState.trucoLevel = 1;
+        cantoPendiente = { tipo: 'truco', nivel: 1, quien: 'cpu' };
+        pushGameMessage(`CPU canta Truco - ¿Qué respondes?`);
+        mostrarBotonesCanto([
+            {text: 'Quiero', value: 'quiero'},
+            {text: 'Subir', value: 'subir'},
+            {text: 'No quiero', value: 'noquiero'}
+        ], respuestaTrucoJugador);
+        return true;
     }
     // CPU puede cantar retruco si ya hay truco aceptado
-    if (gameState.turn === 1 && gameState.trucoLevel === 1) {
-        const fuerza = evaluateHandStrength(gameState.cpuHand);
-        if (fuerza > 0.8) {
-            gameState.trucoLevel = 2;
-            cantoPendiente = { tipo: 'truco', nivel: 2, quien: 'cpu' };
-            pushGameMessage(`CPU sube: Retruco - ¿Qué respondes?`);
-            mostrarBotonesCanto([
-                {text: 'Quiero', value: 'quiero'},
-                {text: gameState.trucoLevel < 3 ? 'Subir' : '', value: 'subir'},
-                {text: 'No quiero', value: 'noquiero'}
-            ].filter(b=>b.text), respuestaTrucoJugador);
-            return true;
-        }
+    if (gameState.turn === 1 && gameState.trucoLevel === 1 && Math.random() < 0.10) {
+        gameState.trucoLevel = 2;
+        cantoPendiente = { tipo: 'truco', nivel: 2, quien: 'cpu' };
+        pushGameMessage(`CPU sube: Retruco - ¿Qué respondes?`);
+        mostrarBotonesCanto([
+            {text: 'Quiero', value: 'quiero'},
+            {text: gameState.trucoLevel < 3 ? 'Subir' : '', value: 'subir'},
+            {text: 'No quiero', value: 'noquiero'}
+        ].filter(b=>b.text), respuestaTrucoJugador);
+        return true;
     }
     // CPU puede cantar envido si no se cantó aún
-    if (gameState.turn === 1 && !gameState.hasEnvido) {
-        const envido = calculateEnvido(gameState.cpuHand);
-        if (envido >= 25) {
-            gameState.envidoLevel = 1;
-            gameState.hasEnvido = true;
-            gameState.gamePhase = 'envido';
-            pushGameMessage(`CPU canta Envido - ¿Qué respondes?`);
-            mostrarBotonesCanto([
-                {text: 'Quiero', value: 'quiero'},
-                {text: 'No quiero', value: 'noquiero'}
-            ], respuestaEnvidoJugador);
-            return true;
-        }
+    if (gameState.turn === 1 && !gameState.hasEnvido && Math.random() < 0.12) {
+        gameState.envidoLevel = 1;
+        gameState.hasEnvido = true;
+        gameState.gamePhase = 'envido';
+        pushGameMessage(`CPU canta Envido - ¿Qué respondes?`);
+        mostrarBotonesCanto([
+            {text: 'Quiero', value: 'quiero'},
+            {text: 'No quiero', value: 'noquiero'}
+        ], respuestaEnvidoJugador);
+        return true;
     }
     return false;
 }
 
 // --- Respuesta a envido de la CPU ---
-function handleEnvido() {
-    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || gameState.hasEnvido || cantoPendiente) return;
-    gameState.envidoLevel++;
-    gameState.hasEnvido = true;
-    gameState.gamePhase = 'envido';
-    const playerEnvido = calculateEnvido(gameState.playerHand);
-    pushGameMessage(`🎲 Cantaste ${getEnvidoText()} (Tú: ${playerEnvido}) - Esperando respuesta...`);
-    updateButtons();
-    // Respuesta inmediata de la CPU
-    cpuResponderEnvido(playerEnvido);
-}
-
-function cpuResponderEnvido(playerEnvido) {
-    const cpuEnvido = calculateEnvido(gameState.cpuHand);
-    let respuesta = '';
-    // CPU SIEMPRE responde: si tiene buen envido acepta, si no rechaza
-    if (cpuEnvido >= 20) {
-        respuesta = 'quiero';
-    } else {
-        respuesta = 'noquiero';
-    }
+function respuestaEnvidoJugador(respuesta) {
+    ocultarBotonesCanto();
     if (respuesta === 'quiero') {
-        pushGameMessage(`✅ CPU aceptó ${getEnvidoText()} (CPU: ${cpuEnvido})`);
+        const playerEnvido = calculateEnvido(gameState.playerHand);
+        const cpuEnvido = calculateEnvido(gameState.cpuHand);
         let puntosEnvido = 2;
         if (playerEnvido > cpuEnvido) {
             pushGameMessage(`🏆 Ganaste el envido (${playerEnvido} vs ${cpuEnvido})`);
@@ -715,50 +735,70 @@ function cpuResponderEnvido(playerEnvido) {
         updateScores();
         gameState.gamePhase = 'playing';
         updateButtons();
-        if (gameState.turn === 1) setTimeout(cpuPlay, 1000);
+        if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
     } else {
-        pushGameMessage('❌ CPU no quiso el envido');
-        gameState.playerPoints += 1;
+        pushGameMessage('❌ No quisiste el envido');
+        gameState.cpuPoints += 1;
         updateScores();
         gameState.gamePhase = 'playing';
         updateButtons();
-        if (gameState.turn === 1) setTimeout(cpuPlay, 1000);
+        if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
     }
 }
 
-// --- Respuesta a Flor de la CPU ---
-function handleFlor() {
-    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || !GAME_CONFIG.allowFlor || gameState.hasFlor || cantoPendiente) return;
-    if (!puedeCantarFlor()) {
-        pushGameMessage('❌ No tienes flor.');
-        return;
-    }
-    gameState.florLevel++;
-    gameState.hasFlor = true;
-    gameState.gamePhase = 'flor';
-    const playerFlor = calculateFlor(gameState.playerHand);
-    pushGameMessage(`🌸 Cantaste ${getFlorText()} (Tú: ${playerFlor}) - Esperando respuesta...`);
-    updateButtons();
-    // Respuesta inmediata de la CPU
-    cpuResponderFlor(playerFlor);
-}
-
-function cpuResponderFlor(playerFlor) {
-    const cpuFlor = calculateFlor(gameState.cpuHand);
-    // CPU SIEMPRE responde: si tiene flor acepta, si no rechaza
-    if (cpuFlor > 0) {
-        pushGameMessage(`✅ CPU acepta ${getFlorText()} (Tú: ${playerFlor}, CPU: ${cpuFlor})`);
-        gameState.gamePhase = 'playing';
-        updateMessage();
-        updateButtons();
-    } else {
-        pushGameMessage(`❌ CPU no quiere ${getFlorText()}`);
-        gameState.roundWinner = 'player';
-        endRound();
-    }
+// --- Deshabilitar botones de canto si hay canto pendiente ---
+function updateButtons() {
+    const canPlay = gameState.gamePhase === 'playing' && gameState.turn === 0 && !cantoPendiente;
+    elements.btnTruco.disabled = !canPlay || gameState.trucoLevel >= 3;
+    elements.btnEnvido.disabled = !canPlay || gameState.hasEnvido;
+    elements.btnFlor.disabled = !canPlay || !GAME_CONFIG.allowFlor || gameState.hasFlor;
 }
 
 // Funciones de apuestas
+function handleEnvido() {
+    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || gameState.hasEnvido || cantoPendiente) return;
+    gameState.envidoLevel++;
+    gameState.hasEnvido = true;
+    gameState.gamePhase = 'envido';
+    const playerEnvido = calculateEnvido(gameState.playerHand);
+    pushGameMessage(`🎲 Cantaste ${getEnvidoText()} (Tú: ${playerEnvido}) - Esperando respuesta...`);
+    updateButtons();
+    setTimeout(() => {
+        const cpuEnvido = calculateEnvido(gameState.cpuHand);
+        const cpuAccepts = cpuEnvido >= 20;
+        if (cpuAccepts) {
+            pushGameMessage(`✅ CPU aceptó ${getEnvidoText()} (CPU: ${cpuEnvido})`);
+            // Resolver envido
+            let puntosEnvido = 2; // Puedes ajustar según la apuesta
+            if (playerEnvido > cpuEnvido) {
+                pushGameMessage(`🏆 Ganaste el envido (${playerEnvido} vs ${cpuEnvido})`);
+                gameState.playerPoints += puntosEnvido;
+            } else if (cpuEnvido > playerEnvido) {
+                pushGameMessage(`🏆 CPU ganó el envido (${cpuEnvido} vs ${playerEnvido})`);
+                gameState.cpuPoints += puntosEnvido;
+            } else {
+                // Empate: gana el mano
+                if (gameState.isPlayerMano) {
+                    pushGameMessage(`🤝 Empate en envido, ganas por ser mano (${playerEnvido})`);
+                    gameState.playerPoints += puntosEnvido;
+                } else {
+                    pushGameMessage(`🤝 Empate en envido, CPU gana por ser mano (${cpuEnvido})`);
+                    gameState.cpuPoints += puntosEnvido;
+                }
+            }
+            updateScores();
+            gameState.gamePhase = 'playing';
+            updateButtons();
+        } else {
+            pushGameMessage(`❌ CPU no quiso el envido`);
+            gameState.playerPoints += 1;
+            updateScores();
+            gameState.gamePhase = 'playing';
+            updateButtons();
+        }
+    }, 2000);
+}
+
 function calculateEnvido(hand) {
     const suits = {};
     hand.forEach(card => {
@@ -781,6 +821,38 @@ function calculateEnvido(hand) {
         if (!isFinite(maxEnvido) || isNaN(maxEnvido)) maxEnvido = 0;
     }
     return maxEnvido;
+}
+
+function handleFlor() {
+    if (gameState.gamePhase !== 'playing' || gameState.turn !== 0 || !GAME_CONFIG.allowFlor || gameState.hasFlor || cantoPendiente) return;
+    if (!puedeCantarFlor()) {
+        pushGameMessage('❌ No tienes flor.');
+        return;
+    }
+    gameState.florLevel++;
+    gameState.hasFlor = true;
+    gameState.gamePhase = 'flor';
+    
+    const playerFlor = calculateFlor(gameState.playerHand);
+    pushGameMessage(`🌸 Cantaste ${getFlorText()} (Tú: ${playerFlor}) - Esperando respuesta...`);
+    updateButtons();
+    
+    setTimeout(() => {
+        const cpuFlor = calculateFlor(gameState.cpuHand);
+        const cpuAccepts = cpuFlor > 0;
+        
+        if (cpuAccepts) {
+            pushGameMessage(`✅ CPU acepta ${getFlorText()} (Tú: ${playerFlor}, CPU: ${cpuFlor})`);
+            gameState.gamePhase = 'playing';
+            // Continuar con el juego, no reiniciar la mano
+            updateMessage();
+            updateButtons();
+        } else {
+            pushGameMessage(`❌ CPU no quiere ${getFlorText()}`);
+            gameState.roundWinner = 'player';
+            endRound();
+        }
+    }, 2000);
 }
 
 function calculateFlor(hand) {

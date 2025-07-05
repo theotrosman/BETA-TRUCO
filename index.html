@@ -7,6 +7,11 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div id="volumeControl" style="position:fixed; top:0; left:0; right:0; background:rgba(0,0,0,0.8); padding:8px; z-index:9999; display:flex; align-items:center; justify-content:center; gap:10px; color:white; font-family:Arial, sans-serif; font-size:14px;">
+    <label for="volumeSlider" style="font-weight:bold;">Volumen</label>
+    <input type="range" id="volumeSlider" min="0" max="100" value="50" style="width:150px; height:6px; border-radius:3px; background:#333; outline:none; cursor:pointer;">
+    <span id="volumeValue" style="min-width:30px; text-align:center;">50%</span>
+</div>
 <main id="game">
 <header>
 <h1>🎴 Truco Argentino</h1>
@@ -80,5 +85,6 @@
 </section>
 </main>
 <script src="main.js"></script>
+<audio id="musicaFondo" src="resources/musica/840rodrigo.mp3" preload="auto" style="display:none"></audio>
 </body>
 </html>
