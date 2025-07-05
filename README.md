@@ -1,4 +1,4 @@
-## 📜 Copyright
+## 📜 Copyright - [Sitio WEB de TEST](https://theotrosman.github.io/BETA-TRUCO/)
 
 © 2025 Theo Trosman, Alan Vitas y Sebastián Calviño. Todos los derechos reservados.
 
