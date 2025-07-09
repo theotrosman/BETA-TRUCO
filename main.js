@@ -146,7 +146,9 @@ let gameState = {
     gameStartTime: null,
     totalTimePlayed: 0,
     turnsPlayed: 0,
-    comodinesUsados: 0
+    comodinesUsados: 0,
+    // Historial de bazas
+    bazasHistorial: [] // Array para almacenar todas las bazas jugadas
 };
 
 // Nuevo: Estado de canto pendiente
@@ -170,6 +172,11 @@ const elements = {
     envidoStatus: document.getElementById('envidoStatus'),
     florStatus: document.getElementById('florStatus'),
     cantoResponse: document.getElementById('cantoResponse'),
+    bazasContainer: document.getElementById('bazasContainer'),
+    playerPointsDisplay: document.getElementById('playerPointsDisplay'),
+    cpuPointsDisplay: document.getElementById('cpuPointsDisplay'),
+    highScoreDisplay: document.getElementById('highScoreDisplay'),
+    runScoreDisplay: document.getElementById('runScoreDisplay'),
     // Barra de tiempo (se crea si no existe)
     turnoBar: document.getElementById('turnoBar') || (() => {
         const bar = document.createElement('div');
@@ -197,6 +204,82 @@ elements.btnStart.onclick = startNewGame;
 elements.btnTruco.onclick = handleTruco;
 elements.btnEnvido.onclick = handleEnvido;
 elements.btnFlor.onclick = handleFlor;
+
+// Inicializar historial de bazas al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    renderizarHistorialBazas();
+    actualizarContadoresPuntos();
+    
+    // Asegurar que los contadores se muestren correctamente
+    setTimeout(() => {
+        actualizarContadoresPuntos();
+    }, 100);
+});
+
+// Función para actualizar los contadores de puntos
+function actualizarContadoresPuntos() {
+    // Actualizar puntos del jugador
+    if (elements.playerPointsDisplay) {
+        elements.playerPointsDisplay.textContent = gameState.playerPoints;
+        // Agregar animación si los puntos cambiaron
+        if (elements.playerPointsDisplay.dataset.lastValue !== gameState.playerPoints.toString()) {
+            elements.playerPointsDisplay.classList.add('updated');
+            setTimeout(() => {
+                elements.playerPointsDisplay.classList.remove('updated');
+            }, 600);
+            elements.playerPointsDisplay.dataset.lastValue = gameState.playerPoints.toString();
+        }
+    }
+    
+    // Actualizar puntos de la CPU
+    if (elements.cpuPointsDisplay) {
+        elements.cpuPointsDisplay.textContent = gameState.cpuPoints;
+        // Agregar animación si los puntos cambiaron
+        if (elements.cpuPointsDisplay.dataset.lastValue !== gameState.cpuPoints.toString()) {
+            elements.cpuPointsDisplay.classList.add('updated');
+            setTimeout(() => {
+                elements.cpuPointsDisplay.classList.remove('updated');
+            }, 600);
+            elements.cpuPointsDisplay.dataset.lastValue = gameState.cpuPoints.toString();
+        }
+    }
+    
+    // Actualizar récord personal
+    const highScore = localStorage.getItem('trucoHighScore') || 0;
+    if (elements.highScoreDisplay) {
+        elements.highScoreDisplay.textContent = highScore;
+    }
+    
+    // Actualizar puntos de la run
+    if (elements.runScoreDisplay) {
+        elements.runScoreDisplay.textContent = currentRunScore;
+        // Agregar animación si los puntos de la run cambiaron
+        if (elements.runScoreDisplay.dataset.lastValue !== currentRunScore.toString()) {
+            elements.runScoreDisplay.classList.add('updated');
+            setTimeout(() => {
+                elements.runScoreDisplay.classList.remove('updated');
+            }, 600);
+            elements.runScoreDisplay.dataset.lastValue = currentRunScore.toString();
+        }
+    }
+}
+
+// Función para verificar y actualizar high score
+function verificarHighScore() {
+    const currentHighScore = parseInt(localStorage.getItem('trucoHighScore') || 0);
+    if (currentRunScore > currentHighScore) {
+        localStorage.setItem('trucoHighScore', currentRunScore.toString());
+        if (elements.highScoreDisplay) {
+            elements.highScoreDisplay.textContent = currentRunScore;
+            elements.highScoreDisplay.classList.add('updated');
+            setTimeout(() => {
+                elements.highScoreDisplay.classList.remove('updated');
+            }, 600);
+        }
+        return true; // Nuevo récord
+    }
+    return false; // No es récord
+}
 
 // Control de volumen
 const volumeSlider = document.getElementById('volumeSlider');
@@ -502,6 +585,13 @@ function startInfiniteRun() {
     document.getElementById('actions').classList.remove('oculto');
     let over = document.getElementById('gameOverScreen');
     if (over) over.style.display = 'none';
+    
+    // Mostrar contador de puntos
+    const pointsContainer = document.getElementById('pointsContainer');
+    if (pointsContainer) {
+        pointsContainer.style.display = 'flex';
+    }
+    
     startNewGame();
     updateScores();
     updateRunScoreUI();
@@ -511,39 +601,42 @@ function startInfiniteRun() {
 function updateRunScoreUI() {
     const el = document.getElementById('runScoreMain');
     if (el) el.textContent = currentRunScore;
+    
+    // Actualizar también el contador de puntos de la run en el nuevo display
+    if (elements.runScoreDisplay) {
+        elements.runScoreDisplay.textContent = currentRunScore;
+        // Agregar animación si los puntos cambiaron
+        if (elements.runScoreDisplay.dataset.lastValue !== currentRunScore.toString()) {
+            elements.runScoreDisplay.classList.add('updated');
+            setTimeout(() => {
+                elements.runScoreDisplay.classList.remove('updated');
+            }, 600);
+            elements.runScoreDisplay.dataset.lastValue = currentRunScore.toString();
+        }
+    }
 }
 
 function startNewGame() {
-    console.log('Iniciando nueva ronda...');
-
-    // Remover clase oculto de todos los elementos
-    document.getElementById('header').classList.remove('oculto');
-    document.getElementById('table').classList.remove('oculto');
-    document.getElementById('actions').classList.remove('oculto');
-    // document.getElementById('gameStatus').classList.add('oculto');
+    // Limpiar estados y ocultar botones de nueva ronda
     document.getElementById('actions2').classList.add('oculto');
+    document.getElementById('btnStart').textContent = '🚀 Nueva Ronda';
     document.getElementById('rules').classList.add('oculto');
-    
+    // Reiniciar variables de ronda
     buildDeck();
     shuffle(gameState.deck);
-    
     gameState.playerHand = gameState.deck.splice(0, 3);
     gameState.cpuHand = gameState.deck.splice(0, 3);
     gameState.playerTricks = 0;
     gameState.cpuTricks = 0;
-    
-    // Determinar quién es mano
+    // Cambiar mano solo si no es la primera ronda
     if (gameState.currentRound === 1) {
         gameState.isPlayerMano = Math.random() < 0.5;
     } else {
         gameState.isPlayerMano = !gameState.isPlayerMano;
     }
-    
-    // El mano siempre empieza
     gameState.turn = gameState.isPlayerMano ? 0 : 1;
-    
     gameState.currentRound++;
-    currentRound = gameState.currentRound; // Actualizar contador global
+    currentRound = gameState.currentRound;
     gameState.trucoLevel = 0;
     gameState.envidoLevel = 0;
     gameState.florLevel = 0;
@@ -552,38 +645,29 @@ function startNewGame() {
     gameState.cardsPlayed = [];
     gameState.roundWinner = null;
     gameState.gamePhase = 'playing';
-    // Reiniciar variables de envido
     gameState.envidoCantado = false;
     gameState.manoActual = 1;
     
-    // Inicializar tiempo de juego para estadísticas
-    if (gameState.currentRound === 2) {
-        gameState.gameStartTime = Date.now();
-    }
+    // Limpiar historial de bazas para nueva ronda
+    gameState.bazasHistorial = [];
+    renderizarHistorialBazas();
     
-    console.log('Mano:', gameState.isPlayerMano ? 'Jugador' : 'CPU');
-    console.log('Turno inicial:', gameState.turn === 0 ? 'Jugador' : 'CPU');
+    // Mostrar la mesa para la nueva mano
+    mostrarMesa();
     
     renderHands();
     renderPlayArea();
     updateMessage();
     updateButtons();
-    
-    // Mostrar quién es mano
     const manoText = gameState.isPlayerMano ? 'TÚ' : 'LA CPU';
     pushGameMessage(`🎯 ${manoText} ES MANO - ¡COMIENZA EL JUEGO!`);
-    
-    // Si la CPU es mano, que juegue automáticamente
     if (gameState.turn === 1) {
         setTimeout(() => {
-            console.log('CPU es mano, jugando automáticamente...');
             cpuPlay();
         }, 2000);
     } else {
         startTurnTimeout();
     }
-    
-    // Los multiplicadores se actualizan en endRound()
 }
 
 function createCardElement(card, owner, clickable = false, index = null, isBack = false) {
@@ -678,13 +762,144 @@ function renderHands() {
 }
 
 function renderPlayArea() {
-    elements.playArea.innerHTML = '<div class="play-area-label">Mesa de Juego</div>';
+    elements.playArea.innerHTML = '<div class="play-area-label"></div>';
+    
+    // Mostrar la mesa cuando se están jugando cartas
+    mostrarMesa();
+    
+    // Crear contenedor para las cartas jugadas
+    const cardsContainer = document.createElement('div');
+    cardsContainer.style.display = 'flex';
+    cardsContainer.style.justifyContent = 'center';
+    cardsContainer.style.alignItems = 'center';
+    cardsContainer.style.gap = '10px';
+    cardsContainer.style.position = 'relative';
+    cardsContainer.style.zIndex = '10';
+    
     gameState.cardsPlayed.forEach((card, idx) => {
         // Marcar como jugada
         card.played = true;
         const cardElement = createCardElement(card, card.owner, false, null);
-        elements.playArea.appendChild(cardElement);
+        cardsContainer.appendChild(cardElement);
     });
+    
+    elements.playArea.appendChild(cardsContainer);
+}
+
+// Función para agregar una baza al historial
+function agregarBazaAlHistorial(cards, ganador, numeroBaza) {
+    const baza = {
+        cards: [...cards],
+        ganador: ganador,
+        numero: numeroBaza,
+        timestamp: Date.now()
+    };
+    
+    gameState.bazasHistorial.push(baza);
+    renderizarHistorialBazas();
+}
+
+// Función para renderizar el historial de bazas
+function renderizarHistorialBazas() {
+    if (!elements.bazasContainer) return;
+    
+    elements.bazasContainer.innerHTML = '';
+    
+    // Actualizar contador de bazas
+    const bazasCount = document.getElementById('bazasCount');
+    if (bazasCount) {
+        bazasCount.textContent = gameState.bazasHistorial.length;
+    }
+    
+    // Mostrar mensaje si no hay bazas
+    if (gameState.bazasHistorial.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.color = '#6c757d';
+        emptyMessage.style.fontStyle = 'italic';
+        emptyMessage.style.padding = '20px';
+        elements.bazasContainer.appendChild(emptyMessage);
+        
+        // Mostrar la mesa cuando no hay bazas
+        mostrarMesa();
+        return;
+    }
+    
+    // Ocultar la mesa cuando hay bazas en el historial
+    ocultarMesa();
+    
+    gameState.bazasHistorial.forEach((baza, index) => {
+        const bazaElement = document.createElement('div');
+        bazaElement.className = `baza-item ${baza.ganador === 'player' ? 'ganada-jugador' : 'ganada-cpu'}`;
+        
+        // Determinar qué carta ganó
+        const cartaGanadora = baza.cards.reduce((ganadora, carta) => {
+            return carta.power > ganadora.power ? carta : ganadora;
+        });
+        
+        const header = `
+            <div class="baza-header">
+                <span class="baza-numero">Baza ${baza.numero}</span>
+                <span class="baza-ganador ${baza.ganador}">${baza.ganador === 'player' ? '🏆 Tú' : '🤖 CPU'}</span>
+            </div>
+        `;
+        
+        const cartasHTML = baza.cards.map(carta => {
+            const esGanadora = carta === cartaGanadora;
+            const cartaClass = esGanadora ? 'baza-carta ganadora' : 'baza-carta';
+            const ownerLabel = carta.owner === 'player' ? 'Tú' : 'CPU';
+            return `
+                <div class="${cartaClass}" title="${ownerLabel}: ${carta.rank} de ${carta.suit}">
+                    <img src="./resources/cartas/${carta.rank}de${carta.suit}.png" alt="${carta.rank} de ${carta.suit}">
+                    <div class="carta-owner" style="position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 0.6em; white-space: nowrap;">${ownerLabel}</div>
+                </div>
+            `;
+        }).join('');
+        
+        const cartasContainer = `
+            <div class="baza-cartas">
+                ${cartasHTML}
+            </div>
+        `;
+        
+        bazaElement.innerHTML = header + cartasContainer;
+        
+        // Agregar animación si es la baza más reciente
+        if (index === gameState.bazasHistorial.length - 1) {
+            setTimeout(() => {
+                bazaElement.classList.add('nueva');
+            }, 100);
+        }
+        
+        elements.bazasContainer.appendChild(bazaElement);
+    });
+    
+    // Hacer scroll al final para mostrar la baza más reciente
+    if (gameState.bazasHistorial.length > 0) {
+        setTimeout(() => {
+            elements.bazasContainer.scrollTop = elements.bazasContainer.scrollHeight;
+        }, 200);
+    }
+}
+
+// Función para ocultar la mesa
+function ocultarMesa() {
+    const playArea = document.getElementById('playArea');
+    if (playArea) {
+        playArea.style.opacity = '0';
+        playArea.style.transform = 'scale(0.8)';
+        playArea.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    }
+}
+
+// Función para mostrar la mesa
+function mostrarMesa() {
+    const playArea = document.getElementById('playArea');
+    if (playArea) {
+        playArea.style.opacity = '1';
+        playArea.style.transform = 'scale(1)';
+        playArea.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    }
 }
 
 function playPlayerCard(index, porTimeout = false) {
@@ -837,6 +1052,9 @@ function evaluateTrick() {
         window.playerStats.recordCardPlayed(cardCode, true, isEnvido, isTruco);
     }
     
+    // Agregar baza al historial antes de limpiar las cartas
+    agregarBazaAlHistorial([...gameState.cardsPlayed], winner, gameState.manoActual);
+    
     const winnerText = winner === 'player' ? 'TÚ' : 'LA CPU';
     pushGameMessage(`🏆 ${winnerText} GANÓ LA MANO (${gameState.playerTricks}-${gameState.cpuTricks})`);
     gameState.cardsPlayed = [];
@@ -866,10 +1084,8 @@ function evaluateTrick() {
 
 function endRound() {
     console.log('Finalizando ronda...');
-    
     let roundWinner;
     let roundMessage = '';
-    
     if (gameState.playerTricks > gameState.cpuTricks) {
         roundWinner = 'player';
         roundMessage = '🎉 ¡GANASTE LA RONDA!';
@@ -881,41 +1097,7 @@ function endRound() {
         roundWinner = gameState.isPlayerMano ? 'player' : 'cpu';
         roundMessage = `🤝 Empate - Gana ${roundWinner === 'player' ? 'TÚ' : 'LA CPU'} (era mano)`;
     }
-    
-    // Registrar estadísticas si existe el sistema de perfil
-    if (typeof window.playerStats !== 'undefined') {
-        // Calcular tiempo jugado
-        const timePlayed = gameState.gameStartTime ? (Date.now() - gameState.gameStartTime) / 1000 : 0;
-        
-        const gameResult = {
-            won: roundWinner === 'player',
-            chicosWon: roundWinner === 'player' ? 1 : 0,
-            envidosWon: gameState.envidoLevel > 0 && roundWinner === 'player' ? 1 : 0,
-            trucosWon: gameState.trucoLevel > 0 && roundWinner === 'player' ? 1 : 0,
-            floresCantadas: gameState.florLevel > 0 ? 1 : 0,
-            comodinesUsados: gameState.comodinesUsados,
-            timePlayed: timePlayed,
-            turnsPlayed: gameState.turnsPlayed,
-            perfectGame: gameState.playerTricks === 3,
-            comebackWin: false,
-            highEnvido: false,
-            valeCuatroWin: gameState.trucoLevel === 3 && roundWinner === 'player'
-        };
-        window.playerStats.updateGameStats(gameResult);
-        
-        // Actualizar estadísticas de la CPU
-        if (STATS_CONFIG.CPU_STATS_ENABLED) {
-            if (roundWinner === 'cpu') {
-                window.playerStats.cpuStats.wins++;
-            } else {
-                window.playerStats.cpuStats.losses++;
-            }
-            window.playerStats.cpuStats.avgTimePerTurn = timePlayed / gameState.turnsPlayed;
-        }
-    }
-    
     gameState.roundWinner = roundWinner;
-    
     // Calcular puntos
     let points = 1;
     let pointsBreakdown = ['Ronda: +1'];
@@ -931,18 +1113,22 @@ function endRound() {
         points += gameState.florLevel;
         pointsBreakdown.push(`Flor: +${gameState.florLevel}`);
     }
-    // Aplicar multiplicadores competitivos
     if (roundWinner === 'player') {
         gameState.playerPoints += Math.round(points * playerMultiplier);
     } else {
         gameState.cpuPoints += Math.round(points * cpuMultiplier);
     }
-    
-    // Actualizar multiplicadores al final de cada ronda
     updateMultipliers();
-    
-    // Condición de derrota: CPU supera al jugador por más de 5 puntos totales
-    if ((gameState.cpuPoints - gameState.playerPoints) > 5) {
+    pushGameMessage(`${roundMessage} - ${points} punto${points > 1 ? 's' : ''} (${pointsBreakdown.join(', ')})`);
+    const hadChico = checkChicoWinner();
+    updateScores();
+    // Si alguien ganó la partida
+    if (gameState.playerChicos >= GAME_CONFIG.numChicos || gameState.cpuChicos >= GAME_CONFIG.numChicos) {
+        setTimeout(endGame, 2000);
+        return;
+    }
+    // Si la run terminó por diferencia, mostrar game over
+    if ((gameState.cpuChicos - gameState.playerChicos) >= 5) {
         if (currentRunScore > highestScore) {
             highestScore = currentRunScore;
             localStorage.setItem('truco_highest_score', highestScore);
@@ -950,28 +1136,10 @@ function endRound() {
         setTimeout(showGameOverScreen, 1500);
         return;
     }
-    
-    // Mostrar mensaje de la ronda
-    pushGameMessage(`${roundMessage} - ${points} punto${points > 1 ? 's' : ''} (${pointsBreakdown.join(', ')})`);
-    
-    // Verificar si alguien ganó un chico
-    const hadChico = checkChicoWinner();
-    
-    updateScores();
-    
-    // Preparar siguiente ronda o fin del juego
-    if (gameState.playerChicos >= GAME_CONFIG.numChicos || 
-        gameState.cpuChicos >= GAME_CONFIG.numChicos) {
-        setTimeout(endGame, 3000);
-    } else if ((gameState.cpuChicos - gameState.playerChicos) >= 5) {
-        // Si la run terminó por diferencia, no hacer nada (pantalla de game over ya se muestra)
-        return;
-    } else {
-        // SIEMPRE iniciar la siguiente ronda automáticamente en run infinita
-        setTimeout(() => {
-            startNewGame();
-        }, 2000);
-    }
+    // SIEMPRE iniciar la siguiente ronda automáticamente
+    setTimeout(() => {
+        startNewGame();
+    }, 2000);
 }
 
 function checkChicoWinner() {
@@ -980,6 +1148,13 @@ function checkChicoWinner() {
         gameState.playerChicos++;
         currentRunScore++;
         updateRunScoreUI();
+        
+        // Verificar si es un nuevo récord
+        const esNuevoRecord = verificarHighScore();
+        if (esNuevoRecord) {
+            pushGameMessage(`🏆 ¡NUEVO RÉCORD! ¡${currentRunScore} puntos!`);
+        }
+        
         checkProceduralDifficulty();
         gameState.playerPoints = 0;
         gameState.cpuPoints = 0;
@@ -992,7 +1167,6 @@ function checkChicoWinner() {
         hadChico = true;
         pushGameMessage(`😔 La CPU ganó un chico. Marcador: ${gameState.playerChicos} - ${gameState.cpuChicos}`);
     }
-    // --- DERROTA POR DIFERENCIA DE 5 ---
     if ((gameState.cpuChicos - gameState.playerChicos) >= 5) {
         if (currentRunScore > highestScore) {
             highestScore = currentRunScore;
@@ -1198,6 +1372,16 @@ function respuestaTrucoJugador(respuesta) {
             pushGameMessage(`Subís: ${getTrucoText()} - Esperando respuesta de la CPU...`);
             setTimeout(() => cpuResponderTruco(), 2000);
         }
+    } else if (respuesta === 'envido') {
+        // Anular el truco y cantar envido
+        gameState.trucoLevel = 0;
+        gameState.envidoLevel = 1;
+        gameState.hasEnvido = true;
+        gameState.envidoCantado = true;
+        gameState.gamePhase = 'envido';
+        cantoPendiente = { tipo: 'envido', nivel: 1, quien: 'player' };
+        pushGameMessage(`🎯 Anulaste el truco y cantaste Envido - Esperando respuesta de la CPU...`);
+        setTimeout(() => cpuResponderEnvido(), 2000);
     } else if (respuesta === 'noquiero') {
         cantoPendiente = null;
         pushGameMessage(`❌ No quisiste ${getTrucoText()}`);
@@ -1233,6 +1417,7 @@ function cpuPuedeCantarTruco() {
             mostrarBotonesCanto([
                 {text: 'Quiero', value: 'quiero'},
                 {text: 'Subir', value: 'subir'},
+                {text: 'Envido', value: 'envido'},
                 {text: 'No quiero', value: 'noquiero'}
             ], respuestaTrucoJugador);
             return true;
@@ -1315,6 +1500,8 @@ function respuestaEnvidoJugador(respuesta) {
         }
         updateScores();
         gameState.gamePhase = 'playing';
+        // Después del envido, cualquiera puede volver a cantar truco
+        gameState.trucoLevel = 0;
         updateButtons();
         if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
     } else if (respuesta === 'subir') {
@@ -1330,6 +1517,8 @@ function respuestaEnvidoJugador(respuesta) {
         gameState.cpuPoints += 1;
         updateScores();
         gameState.gamePhase = 'playing';
+        // Después del envido, cualquiera puede volver a cantar truco
+        gameState.trucoLevel = 0;
         updateButtons();
         if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
     }
@@ -1372,6 +1561,8 @@ function cpuResponderEnvido() {
             }
         }
         updateScores();
+        // Después del envido, cualquiera puede volver a cantar truco
+        gameState.trucoLevel = 0;
         updateButtons();
         if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
     } else {
@@ -1381,6 +1572,8 @@ function cpuResponderEnvido() {
         gameState.playerPoints += 1;
         updateScores();
         gameState.gamePhase = 'playing';
+        // Después del envido, cualquiera puede volver a cantar truco
+        gameState.trucoLevel = 0;
         updateButtons();
         if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
     }
@@ -1464,6 +1657,8 @@ function handleEnvido() {
                 }
             }
             updateScores();
+            // Después del envido, cualquiera puede volver a cantar truco
+            gameState.trucoLevel = 0;
             updateButtons();
             if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
         } else {
@@ -1473,6 +1668,8 @@ function handleEnvido() {
             gameState.playerPoints += 1;
             updateScores();
             gameState.gamePhase = 'playing';
+            // Después del envido, cualquiera puede volver a cantar truco
+            gameState.trucoLevel = 0;
             updateButtons();
             if (gameState.turn === 1) setTimeout(cpuPlay, 2000);
         }
@@ -1624,6 +1821,8 @@ function updateMessage() {
 function updateScores() {
     elements.playerScore.textContent = `${gameState.playerChicos} (${gameState.playerPoints})`;
     elements.cpuScore.textContent = `${gameState.cpuChicos} (${gameState.cpuPoints})`;
+    // Actualizar también los contadores de puntos
+    actualizarContadoresPuntos();
 }
 
 function updateBetStatus() {

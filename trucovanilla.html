@@ -74,6 +74,341 @@
     opacity: 1;
     transform: translateY(0);
 }
+
+/* Estilos para el historial de bazas */
+.baza-item {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.baza-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border-color: #adb5bd;
+}
+
+.baza-item.ganada-jugador {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+}
+
+.baza-item.ganada-cpu {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: #dc3545;
+}
+
+.baza-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.baza-numero {
+    color: #495057;
+    background: rgba(255,255,255,0.7);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+}
+
+.baza-ganador {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    color: white;
+}
+
+.baza-ganador.jugador {
+    background: #28a745;
+}
+
+.baza-ganador.cpu {
+    background: #dc3545;
+}
+
+.baza-cartas {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: center;
+}
+
+.baza-carta {
+    position: relative;
+    transform: scale(0.8);
+    transition: transform 0.2s ease;
+}
+
+.baza-carta:hover {
+    transform: scale(0.9);
+    z-index: 10;
+}
+
+.baza-carta img {
+    width: 40px;
+    height: 56px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.baza-carta.ganadora {
+    transform: scale(0.85);
+    box-shadow: 0 0 0 2px #ffc107, 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.baza-carta.ganadora img {
+    box-shadow: 0 0 0 2px #ffc107, 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.baza-vs {
+    font-weight: bold;
+    color: #6c757d;
+    font-size: 0.9em;
+    margin: 0 4px;
+}
+
+/* Animación para nuevas bazas */
+@keyframes slideInBaza {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.baza-item.nueva {
+    animation: slideInBaza 0.4s ease-out;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+    .baza-cartas {
+        gap: 4px;
+    }
+    
+    .baza-carta img {
+        width: 32px;
+        height: 45px;
+    }
+    
+    .baza-header {
+        font-size: 0.8em;
+    }
+}
+
+/* Estilos para el scroll del historial */
+#bazasContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+#bazasContainer::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 3px;
+}
+
+#bazasContainer::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.3);
+    border-radius: 3px;
+}
+
+#bazasContainer::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.5);
+}
+
+/* Mejoras para las cartas del historial */
+.baza-carta {
+    position: relative;
+    transform: scale(0.8);
+    transition: transform 0.2s ease;
+    margin: 2px;
+}
+
+.baza-carta:hover {
+    transform: scale(0.9);
+    z-index: 10;
+}
+
+.baza-carta img {
+    width: 40px;
+    height: 56px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.baza-carta.ganadora {
+    transform: scale(0.85);
+}
+
+.baza-carta.ganadora img {
+    box-shadow: 0 0 0 2px #ffc107, 0 4px 8px rgba(0,0,0,0.3);
+    border: 1px solid #ffc107;
+}
+
+/* Efecto de brillo para cartas ganadoras */
+.baza-carta.ganadora::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,193,7,0.3) 50%, transparent 70%);
+    animation: shine 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Estilos para la mesa de juego */
+#playArea {
+    background-attachment: fixed;
+    background-position: center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 1;
+    transform: scale(1);
+}
+
+#playArea .card-flip-container {
+    margin: 5px;
+    z-index: 10;
+    position: relative;
+}
+
+#playArea .card {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    border: 2px solid #fff;
+}
+
+/* Efecto de profundidad para la mesa */
+#playArea::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+    pointer-events: none;
+    border-radius: 12px;
+}
+
+/* Asegurar que las cartas se mantengan en el centro */
+#playArea .play-area-label {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    font-size: 1.1em;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    z-index: 5;
+}
+
+/* Estilos para el contador de puntos */
+#pointsContainer {
+    transition: all 0.3s ease;
+}
+
+#pointsContainer:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border-color: #adb5bd;
+}
+
+.points-item {
+    transition: transform 0.2s ease;
+}
+
+.points-item:hover {
+    transform: scale(1.05);
+}
+
+.points-value {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.points-value.updated {
+    animation: pointsUpdate 0.6s ease-out;
+}
+
+@keyframes pointsUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #ffc107; }
+    100% { transform: scale(1); }
+}
+
+.points-divider {
+    transition: opacity 0.3s ease;
+}
+
+/* Responsive para el contador de puntos */
+@media (max-width: 768px) {
+    #pointsContainer {
+        flex-direction: column;
+        gap: 12px;
+        padding: 15px;
+    }
+    
+    .points-divider {
+        width: 60%;
+        height: 2px;
+        background: linear-gradient(to right, transparent, #adb5bd, transparent);
+    }
+    
+    .points-value {
+        font-size: 1.2em !important;
+    }
+    
+    .points-label {
+        font-size: 0.8em !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #pointsContainer {
+        gap: 10px;
+        padding: 12px;
+    }
+    
+    .points-value {
+        font-size: 1.1em !important;
+    }
+    
+    .points-label {
+        font-size: 0.75em !important;
+    }
+    
+    #playArea {
+        width: 320px !important;
+        height: 240px !important;
+        background-size: 80px 80px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #playArea {
+        width: 360px !important;
+        height: 270px !important;
+        background-size: 90px 90px !important;
+    }
+}
 </style>
 </head>
 <body>
@@ -94,7 +429,7 @@
 <main id="game">
 <header id="header" class="oculto" style="position:relative;">
     <div id="recordBanner" class="record-banner">Récord: <span id="highScoreValue">0</span></div>
-    <h1 style="margin-bottom:0.2em;">🎴 Truco Argentino</h1>
+    <h1 style="margin-bottom:0.2em;">Truco Argentino</h1>
     <div id="score"><span id="playerScore">0 (0)</span> – <span id="cpuScore">0 (0)</span></div>
     <div id="gameInfo">
         <span id="roundInfo">Ronda 1</span> | 
@@ -105,21 +440,78 @@
     </div>
 </header>
 
-<div id="multipliersContainer" style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:900px;margin:0 auto 10px auto;">
-    <div id="playerMultiplier" class="multiplier player-multiplier">🧍‍♂️ x1.0</div>
-    <div style="flex:1;"></div>
-    <div id="cpuMultiplier" class="multiplier cpu-multiplier">🤖 x0.30</div>
+
+
+<!-- Contador de Puntos y High Score -->
+<div id="pointsContainer" style="display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%; max-width: 900px; margin: 0 auto 15px auto; padding: 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; border: 2px solid #dee2e6; box-shadow: 0 2px 8px rgba(0,0,0,0.1);     margin-top: 40px;
+">
+    <div class="points-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div class="points-label" style="font-size: 0.9em; font-weight: bold; color: #495057; text-align: center;">🧍‍♂️ Tus Puntos</div>
+        <div id="playerPointsDisplay" class="points-value" style="font-size: 1.4em; font-weight: bold; color: #007bff; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">0</div>
+    </div>
+    
+    <div class="points-divider" style="width: 2px; height: 40px; background: linear-gradient(to bottom, transparent, #adb5bd, transparent);"></div>
+    
+    <div class="points-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div class="points-label" style="font-size: 0.9em; font-weight: bold; color: #495057; text-align: center;">🤖 Puntos CPU</div>
+        <div id="cpuPointsDisplay" class="points-value" style="font-size: 1.4em; font-weight: bold; color: #dc3545; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">0</div>
+    </div>
+    
+    <div class="points-divider" style="width: 2px; height: 40px; background: linear-gradient(to bottom, transparent, #adb5bd, transparent);"></div>
+    
+    <div class="points-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div class="points-label" style="font-size: 0.9em; font-weight: bold; color: #495057; text-align: center;">🏆 Récord Personal</div>
+        <div id="highScoreDisplay" class="points-value" style="font-size: 1.4em; font-weight: bold; color: #28a745; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">0</div>
+    </div>
+    
+    <div class="points-divider" style="width: 2px; height: 40px; background: linear-gradient(to bottom, transparent, #adb5bd, transparent);"></div>
+    
+    <div class="points-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div class="points-label" style="font-size: 0.9em; font-weight: bold; color: #495057; text-align: center;">📊 Puntos de la Run</div>
+        <div id="runScoreDisplay" class="points-value" style="font-size: 1.4em; font-weight: bold; color: #fd7e14; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">0</div>
+    </div>
 </div>
 
-<section class="oculto" id="table">
-    <div id="cpuArea" class="hand">
-    <div class="player-label">CPU</div>
+<section class="oculto" id="table" style="display: flex; flex-direction: row; justify-content: center; align-items: stretch; gap: 24px; width: 100%; max-width: 1200px; margin: 0 auto 30px auto;">
+    <!-- Columna izquierda: Jugador -->
+    <div id="playerColumn" style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 18px; min-width: 180px;">
+        <div id="playerInfo" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div class="player-label" style="font-size: 1.2em; font-weight: bold;">Tú</div>
+            <div id="playerMultiplier" class="multiplier player-multiplier">🧍‍♂️ x1.0</div>
+        </div>
+        <div id="playerArea" class="hand"></div>
+        <div id="playerBonus" style="min-height: 32px;"></div>
     </div>
-    <div id="playArea">
-    <div class="play-area-label">Mesa de Juego</div>
+    <!-- Columna centro: Mesa -->
+    <div id="centerColumn" style="flex: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 320px; max-width: 480px;">
+        <div id="playArea" style="width: 400px; height: 300px; background-image: url('./resources/cartas/azulejo.png'); background-repeat: repeat; background-size: 100px 100px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
+            <div class="play-area-label"></div>
+        </div>
+        <div id="message" style="margin-top: -75px;"></div>
+        <div id="currentBets" style="margin-top: 8px;">
+            <div id="trucoStatus" class="bet-status"></div>
+            <div id="envidoStatus" class="bet-status"></div>
+            <div id="florStatus" class="bet-status"></div>
+        </div>
+        
+        <!-- Historial de Bazas -->
+        <div id="bazasHistorial" style="margin-top: 20px; width: 100%; max-width: 400px;">
+            <div class="bazas-title" style="text-align: center; font-weight: bold; color: #333; margin-bottom: 10px; font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span id="bazasCount" style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; font-weight: normal;">0</span>
+            </div>
+            <div id="bazasContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 8px;">
+                <!-- Las bazas se agregarán dinámicamente aquí -->
+            </div>
+        </div>
     </div>
-    <div id="playerArea" class="hand">
-    <div class="player-label">Tú</div>
+    <!-- Columna derecha: CPU -->
+    <div id="cpuColumn" style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; gap: 18px; min-width: 180px;">
+        <div id="cpuInfo" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <div class="player-label" style="font-size: 1.2em; font-weight: bold;">CPU</div>
+            <div id="cpuMultiplier" class="multiplier cpu-multiplier">🤖 x0.30</div>
+        </div>
+        <div id="cpuArea" class="hand"></div>
+        <div id="cpuBonus" style="min-height: 32px;"></div>
     </div>
 </section>
 
@@ -134,7 +526,6 @@
 
 
 <section id="gameStatus">
-    <div id="message">¡Bienvenido al Truco Argentino! Presiona "Nueva Ronda" para comenzar.</div>
     <div id="currentBets">
         <div id="trucoStatus" class="bet-status"></div>
         <div id="envidoStatus" class="bet-status"></div>
