@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Truco Argentino</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+#loadingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #3b5998 0%, #192f6a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.3s ease-out;
+}
+
+#loadingScreen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #fff;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.loading-progress {
+    width: 180px;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+    transition: width 0.2s ease;
+}
+
+#game {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#game.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+</style>
+</head>
+<body>
+<div id="loadingScreen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Cargando Truco Argentino...</div>
+    <div class="loading-progress">
+        <div class="loading-progress-bar" id="progressBar"></div>
+    </div>
+    <div class="loading-text" id="loadingStatus">Iniciando...</div>
+</div>
+
+<div id="volumeControl" style="position:fixed; top:0; left:0; right:0; background:rgba(0,0,0,0.8); padding:8px; z-index:9999; display:flex; align-items:center; justify-content:center; gap:10px; color:white; font-family:Arial, sans-serif; font-size:14px;">
+    <label for="volumeSlider" style="font-weight:bold;">Volumen</label>
+    <input type="range" id="volumeSlider" min="0" max="100" value="50" style="width:150px; height:6px; border-radius:3px; background:#333; outline:none; cursor:pointer;">
+    <span id="volumeValue" style="min-width:30px; text-align:center;">50%</span>
+</div>
+<main id="game">
+<header id="header" class="oculto" style="position:relative;">
+    <div id="recordBanner" class="record-banner">Récord: <span id="highScoreValue">0</span></div>
+    <h1 style="margin-bottom:0.2em;">🎴 Truco Argentino</h1>
+    <div id="score"><span id="playerScore">0 (0)</span> – <span id="cpuScore">0 (0)</span></div>
+    <div id="gameInfo">
+        <span id="roundInfo">Ronda 1</span> | 
+        <span id="turnInfo">Esperando...</span>
+    </div>
+    <div id="runScoreContainer" style="text-align:center;margin-bottom:0.5em;font-size:1.2em;">
+        🏆 Score de la Run: <span id="runScoreMain">0</span>
+    </div>
+</header>
+
+<div id="multipliersContainer" style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:900px;margin:0 auto 10px auto;">
+    <div id="playerMultiplier" class="multiplier player-multiplier">🧍‍♂️ x1.0</div>
+    <div style="flex:1;"></div>
+    <div id="cpuMultiplier" class="multiplier cpu-multiplier">🤖 x0.30</div>
+</div>
+
+<section class="oculto" id="table">
+    <div id="cpuArea" class="hand">
+    <div class="player-label">CPU</div>
+    </div>
+    <div id="playArea">
+    <div class="play-area-label">Mesa de Juego</div>
+    </div>
+    <div id="playerArea" class="hand">
+    <div class="player-label">Tú</div>
+    </div>
+</section>
+
+<!-- Botones contextuales para responder cantos -->
+<section id="cantoResponse" style="display:none; text-align:center; margin: 20px 0;"></section>
+
+<section id="actions" class="oculto">
+<button id="btnTruco" class="action-btn">🎯 Truco</button>
+<button id="btnEnvido" class="action-btn">🎲 Envido</button>
+<button id="btnFlor" class="action-btn">🌸 Flor</button>
+</section>
+
+
+<section id="gameStatus">
+    <div id="message">¡Bienvenido al Truco Argentino! Presiona "Nueva Ronda" para comenzar.</div>
+    <div id="currentBets">
+        <div id="trucoStatus" class="bet-status"></div>
+        <div id="envidoStatus" class="bet-status"></div>
+        <div id="florStatus" class="bet-status"></div>
+    </div>
+</section>
+
+<section id="actions2">
+    <button id="btnStart" class="start-btn">🚀 Nueva Ronda</button>
+    <a href="perfil.html" class="nav-btn" style="margin-top: 10px; display: inline-block;">📊 Ver Perfil</a>
+</section>
+
+<section id="rules">
+<details>
+<summary>📖 Reglas del Juego</summary>
+<div class="rules-content">
+<h3>Objetivo</h3>
+<p>Ganar un número determinado de chicos (1, 2 ó 3) jugando a 30 puntos cada uno.</p>
+
+<h3>Valor de las Cartas (de mayor a menor)</h3>
+<ul>
+<li><strong>As de espadas</strong> (la mayor)</li>
+<li><strong>As de bastos</strong></li>
+<li><strong>Siete de espadas</strong> (manilla)</li>
+<li><strong>Siete de oros</strong> (manilla)</li>
+<li><strong>Treses</strong></li>
+<li><strong>Doses</strong></li>
+<li><strong>Ases falsos</strong> (oros y copas)</li>
+<li><strong>Doces, Onces, Dieces</strong></li>
+<li><strong>Sietes falsos</strong> (copas y bastos)</li>
+<li><strong>Seises, Cincos, Cuatros</strong></li>
+</ul>
+
+<h3>Apuestas</h3>
+<ul>
+<li><strong>Truco:</strong> 2 puntos | <strong>Retruco:</strong> 3 puntos | <strong>Vale cuatro:</strong> 4 puntos</li>
+<li><strong>Envido:</strong> 2 puntos | <strong>Real envido:</strong> 3 puntos | <strong>Falta:</strong> puntos variables</li>
+<li><strong>Flor:</strong> 3 puntos | <strong>Contra flor:</strong> 6 puntos | <strong>Contra flor al resto:</strong> puntos variables</li>
+</ul>
+</div>
+</details>
+</section>
+
+<!-- Contenedor para pantalla de game over (se muestra por JS) -->
+<div id="gameOverScreen" style="display:none;"></div>
+</main>
+<script src="stats-config.js"></script>
+<script src="main.js"></script>
+<script src="perfil.js"></script>
+<audio id="musicaFondo" src="./resources/musica/840rodrigo.mp3" preload="none" style="display:none"></audio>
+<audio id="musicaLaley" src="./resources/musica/laley.mp3" preload="none" style="display:none"></audio>
+<audio id="musicaSodita" src="./resources/musica/sodita.mp3" preload="none" style="display:none"></audio>
+<audio id="musicaAirbag" src="./resources/musica/airbag.mp3" preload="none" style="display:none"></audio>
+<div class="menu-hamburger" id="menuHamburger"><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div></div><div class="menu-overlay" id="menuOverlay"><div class="menu-panel"><div class="menu-title">Menú</div><a href="index.html"><span class="menu-icon">🏠</span> Menú Principal</a><a href="perfil.html"><span class="menu-icon">📊</span> Perfil</a><a href="trucovanilla.html"><span class="menu-icon">🎯</span> Truco Clásico</a><a href="truco-roguelike.html"><span class="menu-icon">🎲</span> Truco Roguelike</a></div></div><script>document.addEventListener('DOMContentLoaded',function(){var h=document.getElementById('menuHamburger');var o=document.getElementById('menuOverlay');function openMenu(){h.classList.add('open');o.classList.add('open');}function closeMenu(){h.classList.remove('open');o.classList.remove('open');}h.onclick=function(e){if(o.classList.contains('open')){closeMenu();}else{openMenu();}};o.onclick=function(e){if(e.target===o){closeMenu();}};document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(o.classList.contains('open')){closeMenu();}else{openMenu();}}});});</script> <style>.nav-btn.perfil-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(145deg,#27ae60,#229954);color:#fff;border:none;border-radius:25px;padding:14px 36px;font-size:1.2em;font-weight:bold;box-shadow:0 4px 16px #22995444;transition:box-shadow .2s,transform .2s;cursor:pointer;text-decoration:none;}.nav-btn.perfil-btn:hover{box-shadow:0 8px 32px #22995466;transform:scale(1.06);}</style><script>document.addEventListener('DOMContentLoaded',function(){var btn=document.querySelector('.nav-btn');if(btn){btn.classList.add('perfil-btn');btn.innerHTML='📊 Ver Perfil';}});</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const gameContainer = document.getElementById('game');
+    const progressBar = document.getElementById('progressBar');
+    const loadingStatus = document.getElementById('loadingStatus');
+    
+    let loadedResources = 0;
+    let totalResources = 0;
+    let loadStartTime = Date.now();
+    let loadTimeout;
+    
+    function updateProgress() {
+        const progress = (loadedResources / totalResources) * 100;
+        progressBar.style.width = progress + '%';
+        loadingStatus.textContent = `Cargando... ${Math.round(progress)}%`;
+    }
+    
+    function finishLoading() {
+        clearTimeout(loadTimeout);
+        const loadTime = Date.now() - loadStartTime;
+        const minLoadTime = 600;
+        const remainingTime = Math.max(0, minLoadTime - loadTime);
+        
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            gameContainer.classList.add('show');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 300);
+        }, remainingTime);
+    }
+    
+    function resourceLoaded() {
+        loadedResources++;
+        updateProgress();
+        
+        if (loadedResources >= totalResources) {
+            finishLoading();
+        }
+    }
+    
+    function loadImage(src) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = src;
+        });
+    }
+    
+    function loadAudio(src) {
+        return new Promise((resolve) => {
+            const audio = new Audio();
+            audio.oncanplaythrough = () => resolve();
+            audio.onerror = () => resolve();
+            audio.preload = 'metadata';
+            audio.src = src;
+        });
+    }
+    
+    async function loadAllResources() {
+        const essentialCartas = [
+            '1deespada.png', '1debasto.png', '1deoro.png', '1decopa.png',
+            '2deespada.png', '2debasto.png', '2deoro.png', '2decopa.png',
+            '3deespada.png', '3debasto.png', '3deoro.png', '3decopa.png',
+            '7deespada.png', '7debasto.png', '7deoro.png', '7decopa.png',
+            '10deespada.png', '10debasto.png', '10deoro.png', '10decopa.png',
+            '11deespada.png', '11debasto.png', '11deoro.png', '11decopa.png',
+            '12deespada.png', '12debasto.png', '12deoro.png', '12decopa.png',
+            'dorsocard.png'
+        ];
+        
+        const essentialMusica = ['840rodrigo.mp3', 'laley.mp3', 'sodita.mp3', 'airbag.mp3'];
+        
+        totalResources = essentialCartas.length + essentialMusica.length;
+        updateProgress();
+        
+        // Timeout de seguridad (10 segundos)
+        loadTimeout = setTimeout(() => {
+            console.warn('⚠️ Timeout de carga alcanzado, continuando...');
+            finishLoading();
+        }, 10000);
+        
+        loadingStatus.textContent = 'Cargando cartas esenciales...';
+        
+        try {
+            const imagePromises = essentialCartas.map(carta => loadImage(`./resources/cartas/${carta}`));
+            await Promise.all(imagePromises);
+            loadedResources += essentialCartas.length;
+            updateProgress();
+            
+            loadingStatus.textContent = 'Cargando música...';
+            
+            const audioPromises = essentialMusica.map(track => loadAudio(`./resources/musica/${track}`));
+            await Promise.all(audioPromises);
+            loadedResources += essentialMusica.length;
+            updateProgress();
+            
+            resourceLoaded();
+        } catch (error) {
+            console.error('Error durante la carga:', error);
+            finishLoading();
+        }
+    }
+    
+    loadAllResources();
+});
+</script>
+</body>
+</html>
+

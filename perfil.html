@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Perfil - Truco Roguelike</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* Estilos específicos para el perfil */
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #2a3560 0%, #4a5a8a 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.profile-name {
+    font-size: 2.5em;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.profile-level {
+    font-size: 1.2em;
+    opacity: 0.9;
+    margin-top: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    border-left: 4px solid #4a5a8a;
+}
+
+.stat-card h3 {
+    margin: 0 0 15px 0;
+    color: #2a3560;
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #4a5a8a;
+    margin: 10px 0;
+}
+
+.stat-bar {
+    background: #f0f0f0;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a5a8a, #6b7bb3);
+    transition: width 0.3s ease;
+}
+
+.cards-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.card-stat {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #4a5a8a;
+}
+
+.card-image {
+    width: 60px;
+    height: 90px;
+    border-radius: 8px;
+    background: #e3e3e3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #666;
+    background-size: cover;
+    background-position: center;
+}
+
+.card-info h4 {
+    margin: 0 0 5px 0;
+    color: #2a3560;
+}
+
+.card-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.comodines-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.comodines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.comodin-card-profile {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.comodin-card-profile.unlocked {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+}
+
+.comodin-card-profile.locked {
+    opacity: 0.6;
+    filter: grayscale(1);
+}
+
+.comodin-card-profile.unlocked::before {
+    content: '✅';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2em;
+}
+
+.comodin-card-profile.locked::before {
+    content: '🔒';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2em;
+}
+
+.comodin-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.comodin-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #4a5a8a, #6b7bb3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5em;
+}
+
+.comodin-title h4 {
+    margin: 0;
+    color: #2a3560;
+    font-size: 1.1em;
+}
+
+.comodin-title p {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.comodin-desc {
+    color: #555;
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+
+.comodin-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.nav-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4a5a8a, #6b7bb3);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.progress-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.achievement {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 3px solid #e9ecef;
+}
+
+.achievement.unlocked {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+}
+
+.achievement-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+}
+
+.achievement.unlocked .achievement-icon {
+    background: #28a745;
+    color: white;
+}
+
+.achievement-info h4 {
+    margin: 0 0 5px 0;
+    color: #2a3560;
+}
+
+.achievement-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.tab.active {
+    background: #4a5a8a;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comodines-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-name {
+        font-size: 2em;
+    }
+}
+</style>
+</head>
+<body>
+<div class="profile-container">
+    <div class="nav-buttons">
+        <a href="truco-roguelike.html" class="nav-btn">🎴 Jugar</a>
+        <a href="trucovanilla.html" class="nav-btn">🎯 Truco Vanilla</a>
+        <a href="index.html" class="nav-btn">🏠 Inicio</a>
+        <button onclick="exportStats()" class="nav-btn">📤 Exportar</button>
+        <button onclick="importStats()" class="nav-btn">📥 Importar</button>
+        <button onclick="clearStats()" class="nav-btn">🗑️ Limpiar</button>
+    </div>
+
+    <div class="profile-header">
+        <div class="profile-avatar">🎴</div>
+        <h1 class="profile-name" id="playerName">Truquero Legendario</h1>
+        <div class="profile-level" id="playerLevel">Nivel 15 - Maestro del Truco</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('stats')">📊 Estadísticas</button>
+        <button class="tab" onclick="showTab('cards')">🃏 Cartas</button>
+        <button class="tab" onclick="showTab('comodines')">🎭 Comodines</button>
+        <button class="tab" onclick="showTab('achievements')">🏆 Logros</button>
+    </div>
+
+    <!-- Tab Estadísticas -->
+    <div id="stats" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>🎯 Partidas Jugadas</h3>
+                <div class="stat-value" id="gamesPlayed">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="gamesProgress" style="width: 0%"></div>
+                </div>
+                <p>Próximo hito: 50 partidas</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>🏆 Victorias</h3>
+                <div class="stat-value" id="gamesWon">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="winRate" style="width: 0%"></div>
+                </div>
+                <p>Tasa de victoria: <span id="winPercentage">0%</span></p>
+            </div>
+
+            <div class="stat-card">
+                <h3>🎴 Chicos Ganados</h3>
+                <div class="stat-value" id="chicosWon">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="chicosProgress" style="width: 0%"></div>
+                </div>
+                <p>Total de chicos conseguidos</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>🎲 Envidos Ganados</h3>
+                <div class="stat-value" id="envidosWon">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="envidosProgress" style="width: 0%"></div>
+                </div>
+                <p>Envidos exitosos</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>🎯 Trucos Ganados</h3>
+                <div class="stat-value" id="trucosWon">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="trucosProgress" style="width: 0%"></div>
+                </div>
+                <p>Trucos exitosos</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>🌸 Flores Cantadas</h3>
+                <div class="stat-value" id="floresCantadas">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="floresProgress" style="width: 0%"></div>
+                </div>
+                <p>Flores declaradas</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>⚡ Tiempo Promedio</h3>
+                <div class="stat-value" id="avgTime">0s</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="timeProgress" style="width: 0%"></div>
+                </div>
+                <p>Tiempo promedio por turno</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>🎭 Comodines Usados</h3>
+                <div class="stat-value" id="comodinesUsados">0</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="comodinesProgress" style="width: 0%"></div>
+                </div>
+                <p>Comodines utilizados</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Cartas -->
+    <div id="cards" class="tab-content">
+        <div class="cards-section">
+            <h3>🃏 Cartas Más Jugadas</h3>
+            <div class="cards-grid" id="topCards">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <div class="cards-section">
+            <h3>🎯 Cartas Más Efectivas</h3>
+            <div class="cards-grid" id="effectiveCards">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <div class="cards-section">
+            <h3>🎲 Cartas de Envido</h3>
+            <div class="cards-grid" id="envidoCards">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Comodines -->
+    <div id="comodines" class="tab-content">
+        <div class="comodines-section">
+            <h3>🎭 Comodines Desbloqueados</h3>
+            <div class="comodines-grid" id="comodinesGrid">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Logros -->
+    <div id="achievements" class="tab-content">
+        <div class="progress-section">
+            <h3>🏆 Logros</h3>
+            <div id="achievementsList">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="menu-hamburger" id="menuHamburger"><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div></div><div class="menu-overlay" id="menuOverlay"><div class="menu-panel"><div class="menu-title">Menú</div><a href="index.html"><span class="menu-icon">🏠</span> Menú Principal</a><a href="perfil.html"><span class="menu-icon">📊</span> Perfil</a><a href="trucovanilla.html"><span class="menu-icon">🎯</span> Truco Clásico</a><a href="truco-roguelike.html"><span class="menu-icon">🎲</span> Truco Roguelike</a></div></div><script>document.addEventListener('DOMContentLoaded',function(){var h=document.getElementById('menuHamburger');var o=document.getElementById('menuOverlay');function openMenu(){h.classList.add('open');o.classList.add('open');}function closeMenu(){h.classList.remove('open');o.classList.remove('open');}h.onclick=function(e){if(o.classList.contains('open')){closeMenu();}else{openMenu();}};o.onclick=function(e){if(e.target===o){closeMenu();}};document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(o.classList.contains('open')){closeMenu();}else{openMenu();}}});});</script>
+
+<script src="stats-config.js"></script>
+<script src="perfil.js"></script>
+</body>
+</html> 
+

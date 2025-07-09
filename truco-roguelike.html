@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Truco Roguelike</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+#loadingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #3b5998 0%, #192f6a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.3s ease-out;
+}
+
+#loadingScreen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #fff;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.loading-progress {
+    width: 180px;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+    transition: width 0.2s ease;
+}
+
+#game {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#game.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Estilos para la tienda y los slots */
+#shopOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(20,30,60,0.92);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#shopBox {
+  background: #2a3560;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 32px 24px 24px 24px;
+  min-width: 340px;
+  max-width: 95vw;
+  color: #fff;
+  text-align: center;
+}
+.shop-title { font-size: 1.5em; margin-bottom: 18px; letter-spacing: 1px; }
+.shop-comodines { display: flex; gap: 18px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+.comodin-card {
+  background: #3b4a7a;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  padding: 16px 12px;
+  min-width: 180px;
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.comodin-card h3 { margin: 0 0 8px 0; font-size: 1.1em; }
+.comodin-card p { font-size: 0.98em; margin: 0 0 10px 0; }
+.comodin-card button { margin-top: 8px; }
+#shopActions { margin-top: 18px; display: flex; gap: 18px; justify-content: center; }
+#playerComodines, #cpuComodines, #globalComodines {
+  display: flex; gap: 12px; margin: 12px 0; justify-content: center;
+}
+.slot-comodin {
+  background: #e3e3e3; color: #223; border-radius: 8px; min-width: 120px; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; position: relative;
+  cursor: pointer;
+}
+.slot-comodin .remove-btn {
+  position: absolute; top: 2px; right: 4px; background: #c33; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 1em; display: none;
+}
+.slot-comodin.has-comodin .remove-btn { display: block; }
+#cpuComodines .slot-comodin { background: #bbb; color: #444; }
+#globalComodines .slot-comodin { background: #ffe082; color: #7a5a00; border: 2px solid #bfa000; }
+#loreBox {
+  background: #1a223a; color: #ffe082; border-radius: 12px; padding: 12px 18px; margin: 18px auto 0 auto; max-width: 600px; font-size: 1.1em; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+#difficultyBox {
+  background: #2a3560; color: #fff; border-radius: 12px; padding: 8px 14px; margin: 10px auto 0 auto; max-width: 320px; font-size: 1em; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+.menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+.menu-panel {
+  position: absolute;
+  top: 0; right: 0;
+  width: 250px;
+  height: 100vh;
+  background-color: #2a3560;
+  padding: 20px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+}
+.menu-title {
+  font-size: 1.5em;
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+}
+.menu-icon {
+  margin-right: 10px;
+}
+.nav-btn.perfil-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(145deg, #27ae60, #229954);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  padding: 14px 36px;
+  font-size: 1.2em;
+  font-weight: bold;
+  box-shadow: 0 4px 16px #22995444;
+  transition: box-shadow .2s, transform .2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.nav-btn.perfil-btn:hover {
+  box-shadow: 0 8px 32px #22995466;
+  transform: scale(1.06);
+}
+</style>
+</head>
+<body>
+<div id="loadingScreen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Cargando Truco Roguelike...</div>
+    <div class="loading-progress">
+        <div class="loading-progress-bar" id="progressBar"></div>
+    </div>
+    <div class="loading-text" id="loadingStatus">Iniciando...</div>
+</div>
+
+<div id="volumeControl" style="position:fixed; top:0; left:0; right:0; background:rgba(0,0,0,0.8); padding:8px; z-index:9999; display:flex; align-items:center; justify-content:center; gap:10px; color:white; font-family:Arial, sans-serif; font-size:14px;">
+    <label for="volumeSlider" style="font-weight:bold;">Volumen</label>
+    <input type="range" id="volumeSlider" min="0" max="100" value="50" style="width:150px; height:6px; border-radius:3px; background:#333; outline:none; cursor:pointer;">
+    <span id="volumeValue" style="min-width:30px; text-align:center;">50%</span>
+</div>
+<main id="game">
+<header id="header" class="oculto">
+    <h1>🎴 Truco Roguelike</h1>
+    <div id="score"><span id="playerScore">0 (0)</span> – <span id="cpuScore">0 (0)</span></div>
+    <div id="gameInfo">
+    <span id="roundInfo">Ronda 1</span> | 
+    <span id="turnInfo">Esperando...</span>
+    </div>
+</header>
+
+<div id="difficultyBox">Dificultad: <span id="difficultyLevel">Normal</span></div>
+
+<div style="margin: 18px 0 0 0;">
+  <div><b>Tus comodines:</b></div>
+  <div id="playerComodines">
+    <div class="slot-comodin" id="playerSlot1"></div>
+    <div class="slot-comodin" id="playerSlot2"></div>
+  </div>
+  <div><b>Comodín global:</b></div>
+  <div id="globalComodines">
+    <div class="slot-comodin" id="globalSlot"></div>
+  </div>
+  <div><b>Comodines CPU:</b></div>
+  <div id="cpuComodines">
+    <div class="slot-comodin" id="cpuSlot1"></div>
+    <div class="slot-comodin" id="cpuSlot2"></div>
+  </div>
+</div>
+
+<section class="oculto" id="table" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 32px;">
+    <div id="cpuArea" class="hand" style="position: relative;">
+      <div class="player-label">CPU</div>
+      <!-- Comodines CPU -->
+      <div id="cpuComodinesCards" class="comodines-cards"></div>
+    </div>
+    <div id="playArea" style="position: relative;">
+      <div class="play-area-label">Mesa de Juego</div>
+      <!-- Comodín global -->
+      <div id="globalComodinCard" class="comodin-global-card"></div>
+    </div>
+    <div id="playerArea" class="hand" style="position: relative;">
+      <div class="player-label">Tú</div>
+      <!-- Comodines Jugador -->
+      <div id="playerComodinesCards" class="comodines-cards"></div>
+    </div>
+</section>
+
+<!-- Botones contextuales para responder cantos -->
+<section id="cantoResponse" style="display:none; text-align:center; margin: 20px 0;"></section>
+
+<section id="actions" class="oculto">
+<button id="btnTruco" class="action-btn">🎯 Truco</button>
+<button id="btnEnvido" class="action-btn">🎲 Envido</button>
+<button id="btnFlor" class="action-btn">🌸 Flor</button>
+</section>
+
+<section id="gameStatus">
+    <div id="message">¡Bienvenido al Truco Roguelike! Presiona "Nueva Ronda" para comenzar.</div>
+    <div id="currentBets">
+        <div id="trucoStatus" class="bet-status"></div>
+        <div id="envidoStatus" class="bet-status"></div>
+        <div id="florStatus" class="bet-status"></div>
+    </div>
+</section>
+
+<section id="actions2">
+    <button id="btnStart" class="start-btn">🚀 Nueva Ronda</button>
+    <a href="perfil.html" class="nav-btn" style="margin-top: 10px; display: inline-block;">📊 Ver Perfil</a>
+</section>
+
+<section id="rules">
+<details>
+<summary>📖 Reglas del Juego</summary>
+<div class="rules-content">
+<h3>Objetivo</h3>
+<p>Ganar un número determinado de chicos (1, 2 ó 3) jugando a 30 puntos cada uno.</p>
+
+<h3>Valor de las Cartas (de mayor a menor)</h3>
+<ul>
+<li><strong>As de espadas</strong> (la mayor)</li>
+<li><strong>As de bastos</strong></li>
+<li><strong>Siete de espadas</strong> (manilla)</li>
+<li><strong>Siete de oros</strong> (manilla)</li>
+<li><strong>Treses</strong></li>
+<li><strong>Doses</strong></li>
+<li><strong>Ases falsos</strong> (oros y copas)</li>
+<li><strong>Doces, Onces, Dieces</strong></li>
+<li><strong>Sietes falsos</strong> (copas y bastos)</li>
+<li><strong>Seises, Cincos, Cuatros</strong></li>
+</ul>
+
+<h3>Apuestas</h3>
+<ul>
+<li><strong>Truco:</strong> 2 puntos | <strong>Retruco:</strong> 3 puntos | <strong>Vale cuatro:</strong> 4 puntos</li>
+<li><strong>Envido:</strong> 2 puntos | <strong>Real envido:</strong> 3 puntos | <strong>Falta:</strong> puntos variables</li>
+<li><strong>Flor:</strong> 3 puntos | <strong>Contra flor:</strong> 6 puntos | <strong>Contra flor al resto:</strong> puntos variables</li>
+</ul>
+</div>
+</details>
+</section>
+
+<!-- Tienda de comodines -->
+<div id="shopOverlay" style="display:flex;">
+  <div id="shopBox">
+    <div class="shop-title">Tienda de Comodines</div>
+    <div class="shop-comodines" id="shopComodines"></div>
+    <div id="shopActions">
+      <button id="rerollBtn">🔄 Rerrollear</button>
+      <button id="continueBtn">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-hamburger" id="menuHamburger"><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div></div><div class="menu-overlay" id="menuOverlay"><div class="menu-panel"><div class="menu-title">Menú</div><a href="index.html"><span class="menu-icon">🏠</span> Menú Principal</a><a href="perfil.html"><span class="menu-icon">📊</span> Perfil</a><a href="trucovanilla.html"><span class="menu-icon">🎯</span> Truco Clásico</a><a href="truco-roguelike.html"><span class="menu-icon">🎲</span> Truco Roguelike</a></div></div><script>document.addEventListener('DOMContentLoaded',function(){var h=document.getElementById('menuHamburger');var o=document.getElementById('menuOverlay');function openMenu(){h.classList.add('open');o.classList.add('open');}function closeMenu(){h.classList.remove('open');o.classList.remove('open');}h.onclick=function(e){if(o.classList.contains('open')){closeMenu();}else{openMenu();}};o.onclick=function(e){if(e.target===o){closeMenu();}};document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(o.classList.contains('open')){closeMenu();}else{openMenu();}}});});</script>
+
+</main>
+<script src="stats-config.js"></script>
+<script src="main2.js"></script>
+<audio id="musicaFondo" src="./resources/musica/840rodrigo.mp3" preload="none" style="display:none"></audio>
+<audio id="musicaLaley" src="./resources/musica/laley.mp3" preload="none" style="display:none"></audio>
+<audio id="musicaSodita" src="./resources/musica/sodita.mp3" preload="none" style="display:none"></audio>
+<audio id="musicaAirbag" src="./resources/musica/airbag.mp3" preload="none" style="display:none"></audio>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const gameContainer = document.getElementById('game');
+    const progressBar = document.getElementById('progressBar');
+    const loadingStatus = document.getElementById('loadingStatus');
+    
+    let loadedResources = 0;
+    let totalResources = 0;
+    let loadStartTime = Date.now();
+    let loadTimeout;
+    
+    function updateProgress() {
+        const progress = (loadedResources / totalResources) * 100;
+        progressBar.style.width = progress + '%';
+        loadingStatus.textContent = `Cargando... ${Math.round(progress)}%`;
+    }
+    
+    function finishLoading() {
+        clearTimeout(loadTimeout);
+        const loadTime = Date.now() - loadStartTime;
+        const minLoadTime = 600;
+        const remainingTime = Math.max(0, minLoadTime - loadTime);
+        
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            gameContainer.classList.add('show');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 300);
+        }, remainingTime);
+    }
+    
+    function resourceLoaded() {
+        loadedResources++;
+        updateProgress();
+        
+        if (loadedResources >= totalResources) {
+            finishLoading();
+        }
+    }
+    
+    function loadImage(src) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = src;
+        });
+    }
+    
+    function loadAudio(src) {
+        return new Promise((resolve) => {
+            const audio = new Audio();
+            audio.oncanplaythrough = () => resolve();
+            audio.onerror = () => resolve();
+            audio.preload = 'metadata';
+            audio.src = src;
+        });
+    }
+    
+    async function loadAllResources() {
+        const essentialCartas = [
+            '1deespada.png', '1debasto.png', '1deoro.png', '1decopa.png',
+            '2deespada.png', '2debasto.png', '2deoro.png', '2decopa.png',
+            '3deespada.png', '3debasto.png', '3deoro.png', '3decopa.png',
+            '7deespada.png', '7debasto.png', '7deoro.png', '7decopa.png',
+            '10deespada.png', '10debasto.png', '10deoro.png', '10decopa.png',
+            '11deespada.png', '11debasto.png', '11deoro.png', '11decopa.png',
+            '12deespada.png', '12debasto.png', '12deoro.png', '12decopa.png',
+            'dorsocard.png'
+        ];
+        
+        const essentialMusica = ['840rodrigo.mp3'];
+        
+        totalResources = essentialCartas.length + essentialMusica.length;
+        updateProgress();
+        
+        // Timeout de seguridad (10 segundos)
+        loadTimeout = setTimeout(() => {
+            console.warn('⚠️ Timeout de carga alcanzado, continuando...');
+            finishLoading();
+        }, 10000);
+        
+        loadingStatus.textContent = 'Cargando cartas esenciales...';
+        
+        try {
+            const imagePromises = essentialCartas.map(carta => loadImage(`./resources/cartas/${carta}`));
+            await Promise.all(imagePromises);
+            loadedResources += essentialCartas.length;
+            updateProgress();
+            
+            loadingStatus.textContent = 'Cargando música...';
+            
+            const audioPromises = essentialMusica.map(track => loadAudio(`./resources/musica/${track}`));
+            await Promise.all(audioPromises);
+            loadedResources += essentialMusica.length;
+            updateProgress();
+            
+            resourceLoaded();
+        } catch (error) {
+            console.error('Error durante la carga:', error);
+            finishLoading();
+        }
+    }
+    
+    loadAllResources();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var h=document.getElementById('menuHamburger');
+  var o=document.getElementById('menuOverlay');
+  function openMenu(){
+    h.classList.add('open');
+    o.classList.add('open');
+  }
+  function closeMenu(){
+    h.classList.remove('open');
+    o.classList.remove('open');
+  }
+  h.onclick=function(e){
+    if(o.classList.contains('open')){
+      closeMenu();
+    }else{
+      openMenu();
+    }
+  };
+  o.onclick=function(e){
+    if(e.target===o){
+      closeMenu();
+    }
+  };
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      if(o.classList.contains('open')){
+        closeMenu();
+      }else{
+        openMenu();
+      }
+    }
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var btn=document.querySelector('.nav-btn');
+  if(btn){
+    btn.classList.add('perfil-btn');
+    btn.innerHTML='📊 Ver Perfil';
+  }
+});
+</script>
+</body>
+</html> 
