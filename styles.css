@@ -1219,3 +1219,585 @@ button:disabled {
     .record-banner { font-size: 0.9em; padding: 0.2em 0.5em; }
     .multiplier { font-size: 1em; min-width: 60px; }
 }
+
+/* ===== RESPONSIVE MOBILE OPTIMIZATION ===== */
+@media (max-width: 768px) {
+    #game {
+        padding: 10px;
+        max-width: 100%;
+    }
+    
+    header {
+        margin-bottom: 15px;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+    }
+    
+    #score {
+        font-size: 1.1rem;
+        padding: 8px 15px;
+    }
+    
+    #runScoreContainer {
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+    
+    #table {
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .hand {
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .card {
+        width: 80px;
+        height: 120px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        border-width: 2px;
+    }
+    
+    .card img {
+        border-radius: 10px;
+    }
+    
+    #playArea {
+        min-height: 100px;
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    #actions, #actions2 {
+        gap: 10px;
+        margin-bottom: 15px;
+        justify-content: center;
+    }
+    
+    button {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        border-radius: 20px;
+        min-width: 80px;
+    }
+    
+    #btnTruco, #btnEnvido, #btnFlor {
+        font-size: 0.85rem;
+        padding: 8px 16px;
+    }
+    
+    #message {
+        font-size: 0.9rem;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+    }
+    
+    #gameInfo {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+    
+    #gameStatus {
+        font-size: 0.9rem;
+    }
+    
+    .multiplier {
+        font-size: 0.9rem;
+        min-width: 50px;
+        padding: 6px 10px;
+    }
+    
+    .record-banner {
+        font-size: 0.8rem;
+        padding: 0.3em 0.6em;
+    }
+    
+    /* Optimizar contadores de puntos */
+    #multipliersContainer {
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    
+    /* Ajustar historial de bazas */
+    .baza-item {
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .baza-cards {
+        gap: 5px;
+    }
+    
+    .baza-card {
+        width: 50px;
+        height: 75px;
+        border-radius: 8px;
+    }
+    
+    .baza-card img {
+        border-radius: 6px;
+    }
+    
+    .baza-info {
+        font-size: 0.8rem;
+    }
+    
+    /* Botones de canto responsivos */
+    .canto-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin: 15px 0;
+    }
+    
+    .canto-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        border-radius: 18px;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    #game {
+        padding: 8px;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    #score {
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+    
+    #runScoreContainer {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+    }
+    
+    .hand {
+        gap: 6px;
+    }
+    
+    .card {
+        width: 70px;
+        height: 105px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
+    
+    .card img {
+        border-radius: 8px;
+    }
+    
+    #playArea {
+        min-height: 80px;
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    #actions, #actions2 {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    button {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+        border-radius: 16px;
+        min-width: 70px;
+    }
+    
+    #btnTruco, #btnEnvido, #btnFlor {
+        font-size: 0.8rem;
+        padding: 7px 14px;
+    }
+    
+    #message {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+        margin-bottom: 12px;
+    }
+    
+    #gameInfo {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+    
+    #gameStatus {
+        font-size: 0.85rem;
+    }
+    
+    .multiplier {
+        font-size: 0.8rem;
+        min-width: 45px;
+        padding: 5px 8px;
+    }
+    
+    .record-banner {
+        font-size: 0.75rem;
+        padding: 0.25em 0.5em;
+    }
+    
+    /* Contadores más compactos */
+    #multipliersContainer {
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+    
+    /* Historial de bazas más compacto */
+    .baza-item {
+        padding: 6px;
+        margin-bottom: 6px;
+    }
+    
+    .baza-cards {
+        gap: 4px;
+    }
+    
+    .baza-card {
+        width: 45px;
+        height: 68px;
+        border-radius: 6px;
+    }
+    
+    .baza-card img {
+        border-radius: 4px;
+    }
+    
+    .baza-info {
+        font-size: 0.75rem;
+    }
+    
+    /* Botones de canto más compactos */
+    .canto-buttons {
+        gap: 6px;
+        margin: 12px 0;
+    }
+    
+    .canto-btn {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+        border-radius: 16px;
+        min-width: 65px;
+    }
+}
+
+@media (max-width: 360px) {
+    #game {
+        padding: 5px;
+    }
+    
+    header h1 {
+        font-size: 1.3rem;
+    }
+    
+    #score {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+    }
+    
+    #runScoreContainer {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+    
+    .card {
+        width: 65px;
+        height: 98px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+    }
+    
+    .card img {
+        border-radius: 6px;
+    }
+    
+    #playArea {
+        min-height: 70px;
+        padding: 8px;
+        gap: 6px;
+    }
+    
+    button {
+        padding: 7px 12px;
+        font-size: 0.75rem;
+        border-radius: 14px;
+        min-width: 60px;
+    }
+    
+    #btnTruco, #btnEnvido, #btnFlor {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+    
+    #message {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+        margin-bottom: 10px;
+    }
+    
+    .multiplier {
+        font-size: 0.75rem;
+        min-width: 40px;
+        padding: 4px 6px;
+    }
+    
+    .record-banner {
+        font-size: 0.7rem;
+        padding: 0.2em 0.4em;
+    }
+    
+    /* Contadores ultra compactos */
+    #multipliersContainer {
+        gap: 4px;
+        margin-bottom: 10px;
+    }
+    
+    /* Historial de bazas ultra compacto */
+    .baza-card {
+        width: 40px;
+        height: 60px;
+        border-radius: 5px;
+    }
+    
+    .baza-card img {
+        border-radius: 3px;
+    }
+    
+    .baza-info {
+        font-size: 0.7rem;
+    }
+    
+    /* Botones de canto ultra compactos */
+    .canto-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        border-radius: 14px;
+        min-width: 55px;
+    }
+}
+
+/* ===== ORIENTATION LANDSCAPE MOBILE ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+    #game {
+        padding: 5px 10px;
+    }
+    
+    header {
+        margin-bottom: 10px;
+    }
+    
+    header h1 {
+        font-size: 1.4rem;
+        margin-bottom: 3px;
+    }
+    
+    #table {
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .card {
+        width: 75px;
+        height: 112px;
+    }
+    
+    #playArea {
+        min-height: 70px;
+        padding: 10px;
+    }
+    
+    #actions, #actions2 {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    button {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    #message {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+    }
+    
+    .multiplier {
+        font-size: 0.85rem;
+        min-width: 45px;
+    }
+    
+    #multipliersContainer {
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+}
+
+/* ===== TOUCH OPTIMIZATION ===== */
+@media (hover: none) and (pointer: coarse) {
+    .card:hover {
+        transform: none;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    }
+    
+    .card:active {
+        transform: scale(1.05) translateY(-5px);
+        box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+    }
+    
+    button:hover {
+        transform: none;
+    }
+    
+    button:active {
+        transform: scale(0.95);
+    }
+    
+    .canto-btn:hover {
+        transform: none;
+    }
+    
+    .canto-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Mejorar área de toque para botones */
+    button, .canto-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Mejorar área de toque para cartas */
+    .card {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* ===== PREVENT ZOOM ON INPUT FOCUS ===== */
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ===== SCROLL SMOOTH FOR MOBILE ===== */
+@media (max-width: 768px) {
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Mejorar scroll del historial de bazas */
+    #bazasContainer {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+}
+
+/* ===== SAFE AREA SUPPORT ===== */
+@supports (padding: max(0px)) {
+    @media (max-width: 768px) {
+        #game {
+            padding-left: max(10px, env(safe-area-inset-left));
+            padding-right: max(10px, env(safe-area-inset-right));
+            padding-top: max(10px, env(safe-area-inset-top));
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+    }
+}
+
+/* ===== CANTOS BUTTONS STYLES ===== */
+.canto-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 0 10px;
+}
+
+.canto-btn {
+    background: linear-gradient(145deg, #27ae60, #229954);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 16px rgba(39, 174, 96, 0.3);
+    min-width: 100px;
+}
+
+.canto-btn:hover:not(:disabled) {
+    background: linear-gradient(145deg, #229954, #1e8449);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.canto-btn:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.canto-btn:active {
+    transform: scale(0.98);
+}
+
+/* Responsive para botones de canto */
+@media (max-width: 768px) {
+    .canto-buttons {
+        gap: 8px;
+        margin: 15px 0;
+        padding: 0 5px;
+    }
+    
+    .canto-btn {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        border-radius: 20px;
+        min-width: 80px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .canto-buttons {
+        gap: 6px;
+        margin: 12px 0;
+    }
+    
+    .canto-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        border-radius: 18px;
+        min-width: 70px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 360px) {
+    .canto-btn {
+        padding: 7px 14px;
+        font-size: 0.8rem;
+        border-radius: 16px;
+        min-width: 65px;
+        min-height: 44px;
+    }
+}
