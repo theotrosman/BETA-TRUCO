@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Perfil - Truco Roguelike</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <title>Perfil - Truco Roguelike</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="perfil.js"></script>
+
 <style>
 /* Estilos específicos para el perfil */
 .profile-container {
@@ -367,6 +369,8 @@
 }
 </style>
 </head>
+
+
 <body>
 <div class="profile-container">
     <div class="nav-buttons">
@@ -516,7 +520,12 @@
 <div class="menu-hamburger" id="menuHamburger"><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div></div><div class="menu-overlay" id="menuOverlay"><div class="menu-panel"><div class="menu-title">Menú</div><a href="index.html"><span class="menu-icon">🏠</span> Menú Principal</a><a href="perfil.html"><span class="menu-icon">📊</span> Perfil</a><a href="trucovanilla.html"><span class="menu-icon">🎯</span> Truco Clásico</a><a href="truco-roguelike.html"><span class="menu-icon">🎲</span> Truco Roguelike</a></div></div><script>document.addEventListener('DOMContentLoaded',function(){var h=document.getElementById('menuHamburger');var o=document.getElementById('menuOverlay');function openMenu(){h.classList.add('open');o.classList.add('open');}function closeMenu(){h.classList.remove('open');o.classList.remove('open');}h.onclick=function(e){if(o.classList.contains('open')){closeMenu();}else{openMenu();}};o.onclick=function(e){if(e.target===o){closeMenu();}};document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(o.classList.contains('open')){closeMenu();}else{openMenu();}}});});</script>
 
 <script src="stats-config.js"></script>
-<script src="perfil.js"></script>
+<script type="module" src="perfil.js"></script>
+<script type="module">
+import './auth.js';
+import './firebase-config.js';
+import './perfil.js';
+</script>
 </body>
 </html> 
 

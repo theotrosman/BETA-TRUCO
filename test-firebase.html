@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase</title>
+</head>
+<body>
+    <h1>Test Firebase Configuration</h1>
+    <button onclick="testAuth()">Test Authentication</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDU2schpKpGFnd9xYsgfS0CB9JPTPgx6Bo",
+            authDomain: "trukeados-37160.firebaseapp.com",
+            projectId: "trukeados-37160",
+            storageBucket: "trukeados-37160.firebasestorage.app",
+            messagingSenderId: "597326619719",
+            appId: "1:597326619719:web:ec8168fa06fb63dff9bd62",
+            measurementId: "G-2FS1BJS2E6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.testAuth = async function() {
+            try {
+                console.log('Testing Firebase configuration...');
+                console.log('Config:', firebaseConfig);
+                
+                // Intentar crear un usuario de prueba
+                const userCredential = await createUserWithEmailAndPassword(auth, 'test@test.com', 'password123');
+                console.log('Success! User created:', userCredential.user.uid);
+                document.getElementById('result').innerHTML = '✅ Firebase configurado correctamente';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `❌ Error: ${error.code} - ${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html> 

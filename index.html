@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="styles.css">
 <style>
+    
 body {
     background: linear-gradient(135deg, #3b5998 0%, #192f6a 100%);
     min-height: 100vh;
@@ -123,6 +124,73 @@ body {
     color: #e3e3e3;
     font-size: 1em;
 }
+
+.auth-form {
+    background: #4267b2;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 48px 32px 32px 32px;
+    text-align: center;
+    min-width: 320px;
+    max-width: 90vw;
+    color: white;
+}
+
+.auth-form h2 {
+    margin-bottom: 32px;
+    font-size: 2.2em;
+    letter-spacing: 1px;
+}
+
+.auth-form h3 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.auth-form input {
+    display: block;
+    width: 100%;
+    margin: 12px 0;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.auth-btn {
+    display: block;
+    width: 100%;
+    margin: 18px 0;
+    padding: 15px 0;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    color: #4267b2;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+
+.auth-btn:hover {
+    background: #29487d;
+    color: #fff;
+    transform: scale(1.02);
+}
+
+.auth-form p {
+    margin-top: 20px;
+}
+
+.auth-form a {
+    color: #ffd700;
+    text-decoration: none;
+}
+
+.auth-form a:hover {
+    text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -135,11 +203,34 @@ body {
     <div class="loading-text" id="loadingStatus">Iniciando...</div>
 </div>
 
-<div class="menu-container" id="menuContainer">
+<div id="authContainer" style="display: none;">
+    <div class="auth-form">
+        <h2>🎴 Truco Argentino</h2>
+        <div id="loginForm">
+            <h3>Iniciar Sesión</h3>
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Contraseña" required>
+            <button onclick="handleLogin()" class="auth-btn">Iniciar Sesión</button>
+            <p>¿No tienes cuenta? <a href="#" onclick="showRegisterForm()">Regístrate</a></p>
+        </div>
+        <div id="registerForm" style="display: none;">
+            <h3>Registrarse</h3>
+            <input type="text" id="registerName" placeholder="Nombre de usuario" required>
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <input type="password" id="registerPassword" placeholder="Contraseña" required>
+            <button onclick="handleRegister()" class="auth-btn">Registrarse</button>
+            <p>¿Ya tienes cuenta? <a href="#" onclick="showLoginForm()">Inicia sesión</a></p>
+        </div>
+    </div>
+</div>
+
+<div class="menu-container" id="menuContainer" style="display: none;">
+    <div id="userInfo" style="color: white; margin-bottom: 20px; font-size: 1.1em;"></div>
     <h1>🎴 Truco Argentino</h1>
     <a href="trucovanilla.html"><button class="menu-btn">🎯 Truco Vanilla</button></a>
     <a href="truco-roguelike.html"><button class="menu-btn">🎴 Truco Roguelike</button></a>
     <a href="perfil.html"><button class="menu-btn">📊 Perfil & Estadísticas</button></a>
+    <button id="logoutBtn" onclick="handleLogout()" class="menu-btn" style="background: #dc3545; color: white;">Cerrar Sesión</button>
     <div class="menu-footer">Hecho con pasión por el truco 🇦🇷</div>
 </div>
 <audio id="musicaFondo" src="./resources/musica/840rodrigo.mp3" preload="none" style="display:none"></audio>
@@ -148,10 +239,13 @@ body {
 <audio id="musicaAirbag" src="./resources/musica/airbag.mp3" preload="none" style="display:none"></audio>
 <div class="menu-hamburger" id="menuHamburger"><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div><div class="menu-hamburger-bar"></div></div><div class="menu-overlay" id="menuOverlay"><div class="menu-panel"><div class="menu-title">Menú</div><a href="index.html"><span class="menu-icon">🏠</span> Menú Principal</a><a href="perfil.html"><span class="menu-icon">📊</span> Perfil</a><a href="trucovanilla.html"><span class="menu-icon">🎯</span> Truco Clásico</a><a href="truco-roguelike.html"><span class="menu-icon">🎲</span> Truco Roguelike</a></div></div><script>document.addEventListener('DOMContentLoaded',function(){var h=document.getElementById('menuHamburger');var o=document.getElementById('menuOverlay');function openMenu(){h.classList.add('open');o.classList.add('open');}function closeMenu(){h.classList.remove('open');o.classList.remove('open');}h.onclick=function(e){if(o.classList.contains('open')){closeMenu();}else{openMenu();}};o.onclick=function(e){if(e.target===o){closeMenu();}};document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(o.classList.contains('open')){closeMenu();}else{openMenu();}}});});</script>
 
-<script>
+<script type="module">
+import { authManager } from './auth.js';
+
 document.addEventListener('DOMContentLoaded', function() {
     const loadingScreen = document.getElementById('loadingScreen');
     const menuContainer = document.getElementById('menuContainer');
+    const authContainer = document.getElementById('authContainer');
     const progressBar = document.getElementById('progressBar');
     const loadingStatus = document.getElementById('loadingStatus');
     
@@ -174,7 +268,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         setTimeout(() => {
             loadingScreen.classList.add('fade-out');
-            menuContainer.classList.add('show');
+            if (authManager.isAuthenticated()) {
+                menuContainer.classList.add('show');
+            } else {
+                authContainer.classList.add('show');
+            }
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
             }, 300);
@@ -189,6 +287,64 @@ document.addEventListener('DOMContentLoaded', function() {
             finishLoading();
         }
     }
+    
+    window.handleLogin = async function() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            alert('Por favor completa todos los campos');
+            return;
+        }
+        
+        const result = await authManager.login(email, password);
+        if (result.success) {
+            authContainer.style.display = 'none';
+            menuContainer.style.display = 'block';
+            menuContainer.classList.add('show');
+        } else {
+            alert('Error: ' + result.error);
+        }
+    };
+    
+    window.handleRegister = async function() {
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        
+        if (!name || !email || !password) {
+            alert('Por favor completa todos los campos');
+            return;
+        }
+        
+        const result = await authManager.register(email, password, name);
+        if (result.success) {
+            authContainer.style.display = 'none';
+            menuContainer.style.display = 'block';
+            menuContainer.classList.add('show');
+        } else {
+            alert('Error: ' + result.error);
+        }
+    };
+    
+    window.handleLogout = async function() {
+        const result = await authManager.logout();
+        if (result.success) {
+            menuContainer.style.display = 'none';
+            authContainer.style.display = 'block';
+            authContainer.classList.add('show');
+        }
+    };
+    
+    window.showRegisterForm = function() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+    };
+    
+    window.showLoginForm = function() {
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    };
     
     function loadImage(src) {
         return new Promise((resolve) => {
@@ -257,6 +413,10 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAllResources();
 });
 </script>
+
+
+
+  
 </body>
 </html>
 

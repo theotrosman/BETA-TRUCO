@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Debug Test</title>
+</head>
+<body>
+    <h1>Firebase Debug Test</h1>
+    <button onclick="testStep1()">Step 1: Test Config</button>
+    <button onclick="testStep2()">Step 2: Test Auth</button>
+    <button onclick="testStep3()">Step 3: Test Registration</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDU2schpKpGFnd9xYsgfS0CB9JPTPgx6Bo",
+            authDomain: "trukeados-37160.firebaseapp.com",
+            projectId: "trukeados-37160",
+            storageBucket: "trukeados-37160.firebasestorage.app",
+            messagingSenderId: "597326619719",
+            appId: "1:597326619719:web:8c2fee35c201c804f9bd62"
+        };
+
+        let app, auth;
+
+        window.testStep1 = function() {
+            try {
+                console.log('Step 1: Testing Firebase config...');
+                console.log('Config:', firebaseConfig);
+                document.getElementById('result').innerHTML = 'Step 1: Config loaded ✅';
+            } catch (error) {
+                console.error('Step 1 error:', error);
+                document.getElementById('result').innerHTML = `Step 1: Error - ${error.message}`;
+            }
+        };
+
+        window.testStep2 = function() {
+            try {
+                console.log('Step 2: Initializing Firebase...');
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                console.log('Step 2: Firebase initialized successfully');
+                document.getElementById('result').innerHTML = 'Step 2: Firebase initialized ✅';
+            } catch (error) {
+                console.error('Step 2 error:', error);
+                document.getElementById('result').innerHTML = `Step 2: Error - ${error.message}`;
+            }
+        };
+
+        window.testStep3 = async function() {
+            try {
+                console.log('Step 3: Testing user registration...');
+                const userCredential = await createUserWithEmailAndPassword(auth, 'debug@test.com', 'password123');
+                console.log('Step 3: User created successfully:', userCredential.user.uid);
+                document.getElementById('result').innerHTML = 'Step 3: User created successfully ✅';
+            } catch (error) {
+                console.error('Step 3 error:', error);
+                document.getElementById('result').innerHTML = `Step 3: Error - ${error.code}: ${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html> 

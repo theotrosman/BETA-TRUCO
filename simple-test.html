@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Firebase Test</title>
+</head>
+<body>
+    <h1>Simple Firebase Test</h1>
+    <button onclick="testFirebase()">Test Firebase</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDU2schpKpGFnd9xYsgfS0CB9JPTPgx6Bo",
+            authDomain: "trukeados-37160.firebaseapp.com",
+            projectId: "trukeados-37160",
+            storageBucket: "trukeados-37160.firebasestorage.app",
+            messagingSenderId: "597326619719",
+            appId: "1:597326619719:web:8c2fee35c201c804f9bd62"
+        };
+
+        console.log('Firebase config:', firebaseConfig);
+        
+        try {
+            const app = initializeApp(firebaseConfig);
+            console.log('Firebase initialized successfully');
+            
+            const auth = getAuth(app);
+            console.log('Auth initialized successfully');
+            
+            window.testFirebase = async function() {
+                try {
+                    console.log('Attempting to create test user...');
+                    const userCredential = await createUserWithEmailAndPassword(auth, 'test@example.com', 'password123');
+                    console.log('User created successfully:', userCredential.user.uid);
+                    document.getElementById('result').innerHTML = '✅ Success! User created: ' + userCredential.user.uid;
+                } catch (error) {
+                    console.error('Error creating user:', error);
+                    document.getElementById('result').innerHTML = `❌ Error: ${error.code} - ${error.message}`;
+                }
+            };
+        } catch (error) {
+            console.error('Error initializing Firebase:', error);
+            document.getElementById('result').innerHTML = `❌ Firebase init error: ${error.message}`;
+        }
+    </script>
+</body>
+</html> 

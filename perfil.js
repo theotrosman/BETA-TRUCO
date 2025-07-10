@@ -1,27 +1,52 @@
+import { authManager } from './auth.js';
+
 // Sistema de estadísticas del perfil
 class PlayerStats {
     constructor() {
+        this.userId = null;
         this.loadStats();
         this.setupAutoSave();
     }
 
-    // Cargar estadísticas desde localStorage
-    loadStats() {
-        const saved = StatsUtils.loadStats();
-        if (saved) {
-            Object.assign(this, saved);
-            // Validar integridad de datos
-            if (!StatsUtils.validateStats(this)) {
+    validateStats() {
+        return typeof this.gamesPlayed === 'number';
+    }
+
+    // Cargar estadísticas desde Firestore
+    async loadStats() {
+        const user = authManager.getCurrentUser();
+        if (!user) {
+            console.warn('Usuario no autenticado');
+            await this.initializeDefaultStats();
+            return;
+        }
+        
+        this.userId = user.uid;
+        const profile = await authManager.getUserProfile(user.uid);
+        
+        if (profile && profile.stats) {
+            Object.assign(this, profile.stats);
+            // Asegurar que los objetos existen
+            this.cardsPlayed = this.cardsPlayed || {};
+            this.cardsWon = this.cardsWon || {};
+            this.cardsEnvido = this.cardsEnvido || {};
+            this.cardsTruco = this.cardsTruco || {};
+            this.comodinesUnlocked = this.comodinesUnlocked || [];
+            this.comodinesUsed = this.comodinesUsed || {};
+            this.achievements = this.achievements || {};
+            this.gameHistory = this.gameHistory || [];
+            this.cpuStats = this.cpuStats || { wins: 0, losses: 0, avgTimePerTurn: 0, strategyChoices: {} };
+            if (!this.validateStats()) {
                 console.warn('⚠️ Estadísticas corruptas, reinicializando...');
-                this.initializeDefaultStats();
+                await this.initializeDefaultStats();
             }
         } else {
-            this.initializeDefaultStats();
+            await this.initializeDefaultStats();
         }
     }
 
     // Inicializar estadísticas por defecto
-    initializeDefaultStats() {
+    async initializeDefaultStats() {
         this.gamesPlayed = 0;
         this.gamesWon = 0;
         this.chicosWon = 0;
@@ -57,25 +82,52 @@ class PlayerStats {
             strategyChoices: {}
         };
         
-        this.saveStats();
+        await this.saveStats();
     }
 
-    // Guardar estadísticas en localStorage
-    saveStats() {
-        StatsUtils.saveStats(this);
+    // Guardar estadísticas en Firestore
+    async saveStats() {
+        if (!this.userId) {
+            console.warn('No hay usuario autenticado para guardar estadísticas');
+            return;
+        }
+        
+        const statsData = {
+            gamesPlayed: this.gamesPlayed,
+            gamesWon: this.gamesWon,
+            chicosWon: this.chicosWon,
+            envidosWon: this.envidosWon,
+            trucosWon: this.trucosWon,
+            floresCantadas: this.floresCantadas,
+            avgTimePerTurn: this.avgTimePerTurn,
+            comodinesUsados: this.comodinesUsados,
+            totalTimePlayed: this.totalTimePlayed,
+            turnsPlayed: this.turnsPlayed,
+            cardsPlayed: this.cardsPlayed,
+            cardsWon: this.cardsWon,
+            cardsEnvido: this.cardsEnvido,
+            cardsTruco: this.cardsTruco,
+            comodinesUnlocked: this.comodinesUnlocked,
+            comodinesUsed: this.comodinesUsed,
+            achievements: this.achievements,
+            gameHistory: this.gameHistory,
+            cpuStats: this.cpuStats
+        };
+        
+        await authManager.updateUserProfile(this.userId, { stats: statsData });
     }
     
     // Configurar guardado automático
     setupAutoSave() {
         if (STATS_CONFIG.AUTO_SAVE_INTERVAL > 0) {
-            setInterval(() => {
-                this.saveStats();
+            setInterval(async () => {
+                await this.saveStats();
             }, STATS_CONFIG.AUTO_SAVE_INTERVAL);
         }
     }
 
     // Actualizar estadísticas después de una partida
-    updateGameStats(gameResult) {
+    async updateGameStats(gameResult) {
         this.gamesPlayed++;
         
         if (gameResult.won) {
@@ -126,12 +178,12 @@ class PlayerStats {
             this.gameHistory = this.gameHistory.slice(-100);
         }
         
-        this.saveStats();
-        this.checkAchievements();
+        await this.saveStats();
+        await this.checkAchievements();
     }
 
     // Registrar carta jugada
-    recordCardPlayed(cardCode, won = false, envido = false, truco = false) {
+    async recordCardPlayed(cardCode, won = false, envido = false, truco = false) {
         if (!this.cardsPlayed[cardCode]) {
             this.cardsPlayed[cardCode] = 0;
         }
@@ -158,28 +210,28 @@ class PlayerStats {
             this.cardsTruco[cardCode]++;
         }
         
-        this.saveStats();
+        await this.saveStats();
     }
 
     // Desbloquear comodín
-    unlockComodin(comodinId) {
+    async unlockComodin(comodinId) {
         if (!this.comodinesUnlocked.includes(comodinId)) {
             this.comodinesUnlocked.push(comodinId);
-            this.saveStats();
+            await this.saveStats();
         }
     }
 
     // Registrar uso de comodín
-    recordComodinUsed(comodinId) {
+    async recordComodinUsed(comodinId) {
         if (!this.comodinesUsed[comodinId]) {
             this.comodinesUsed[comodinId] = 0;
         }
         this.comodinesUsed[comodinId]++;
-        this.saveStats();
+        await this.saveStats();
     }
 
     // Verificar logros
-    checkAchievements() {
+    async checkAchievements() {
         for (const [id, achievement] of Object.entries(STATS_CONFIG.ACHIEVEMENTS)) {
             if (!this.achievements[id] && achievement.condition(this)) {
                 this.achievements[id] = {
@@ -192,7 +244,7 @@ class PlayerStats {
             }
         }
         
-        this.saveStats();
+        await this.saveStats();
     }
 
     // Métodos auxiliares para logros
@@ -274,6 +326,7 @@ class PlayerStats {
 
     // Obtener cartas más jugadas
     getTopCards(limit = 5) {
+        if (!this.cardsPlayed || typeof this.cardsPlayed !== 'object') return [];
         return Object.entries(this.cardsPlayed)
             .sort(([,a], [,b]) => b - a)
             .slice(0, limit)
@@ -282,12 +335,13 @@ class PlayerStats {
 
     // Obtener cartas más efectivas (mayor ratio de victoria)
     getMostEffectiveCards(limit = 5) {
+        if (!this.cardsWon || typeof this.cardsWon !== 'object') return [];
         return Object.entries(this.cardsWon)
             .map(([card, wins]) => ({
                 card,
                 wins,
-                played: this.cardsPlayed[card] || 0,
-                ratio: this.cardsPlayed[card] ? wins / this.cardsPlayed[card] : 0
+                played: this.cardsPlayed && this.cardsPlayed[card] || 0,
+                ratio: this.cardsPlayed && this.cardsPlayed[card] ? wins / this.cardsPlayed[card] : 0
             }))
             .filter(item => item.played >= 3) // Mínimo 3 usos para ser significativo
             .sort((a, b) => b.ratio - a.ratio)
@@ -296,6 +350,7 @@ class PlayerStats {
 
     // Obtener cartas de envido más usadas
     getTopEnvidoCards(limit = 5) {
+        if (!this.cardsEnvido || typeof this.cardsEnvido !== 'object') return [];
         return Object.entries(this.cardsEnvido)
             .sort(([,a], [,b]) => b - a)
             .slice(0, limit)
@@ -303,160 +358,145 @@ class PlayerStats {
     }
 }
 
-// Inicializar estadísticas
-const playerStats = new PlayerStats();
+async function waitForAuthAndStats() {
+    return new Promise((resolve) => {
+        const check = async () => {
+            const user = authManager.getCurrentUser();
+            if (user) {
+                if (!window.playerStats) {
+                    window.playerStats = new PlayerStats();
+                    await window.playerStats.loadStats();
+                }
+                resolve();
+            } else {
+                setTimeout(check, 200);
+            }
+        };
+        check();
+    });
+}
 
-// Función para mostrar tabs
 function showTab(tabName) {
-    // Ocultar todos los tabs
+    // Ocultar todos los contenidos
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
+    // Quitar activo de todos los botones
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
-    
-    // Mostrar tab seleccionado
-    document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
-    
-    // Cargar contenido específico del tab
+    // Mostrar el contenido correcto
+    const tabContent = document.getElementById(tabName);
+    if (tabContent) {
+        tabContent.classList.add('active');
+    }
+    // Activar el botón correcto
+    const btn = document.querySelector(`.tab[data-tab="${tabName}"]`);
+    if (btn) {
+        btn.classList.add('active');
+    }
+    // Renderizar datos
     switch(tabName) {
         case 'stats':
-            loadStatsTab();
+            window.playerStats && loadStatsTab();
             break;
         case 'cards':
-            loadCardsTab();
+            window.playerStats && loadCardsTab();
             break;
         case 'comodines':
-            loadComodinesTab();
+            window.playerStats && loadComodinesTab();
             break;
         case 'achievements':
-            loadAchievementsTab();
+            window.playerStats && loadAchievementsTab();
             break;
     }
 }
+window.showTab = showTab;
 
-// Cargar tab de estadísticas
+document.addEventListener('DOMContentLoaded', async () => {
+    await waitForAuthAndStats();
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            showTab(this.dataset.tab);
+        });
+    });
+    showTab('stats');
+});
+
 function loadStatsTab() {
-    const level = playerStats.getPlayerLevel();
-    
+    const stats = window.playerStats || {};
+    const level = (stats.getPlayerLevel ? stats.getPlayerLevel() : { name: 'Novato', level: 1 });
     document.getElementById('playerName').textContent = `Truquero ${level.name}`;
     document.getElementById('playerLevel').textContent = `Nivel ${level.level} - ${level.name}`;
-    
-    document.getElementById('gamesPlayed').textContent = playerStats.gamesPlayed;
-    document.getElementById('gamesWon').textContent = playerStats.gamesWon;
-    document.getElementById('chicosWon').textContent = playerStats.chicosWon;
-    document.getElementById('envidosWon').textContent = playerStats.envidosWon;
-    document.getElementById('trucosWon').textContent = playerStats.trucosWon;
-    document.getElementById('floresCantadas').textContent = playerStats.floresCantadas;
-    document.getElementById('avgTime').textContent = `${Math.round(playerStats.avgTimePerTurn)}s`;
-    document.getElementById('comodinesUsados').textContent = playerStats.comodinesUsados;
-    
-    // Calcular porcentajes
-    const winRate = playerStats.gamesPlayed > 0 ? (playerStats.gamesWon / playerStats.gamesPlayed) * 100 : 0;
+    document.getElementById('gamesPlayed').textContent = stats.gamesPlayed || 0;
+    document.getElementById('gamesWon').textContent = stats.gamesWon || 0;
+    document.getElementById('chicosWon').textContent = stats.chicosWon || 0;
+    document.getElementById('envidosWon').textContent = stats.envidosWon || 0;
+    document.getElementById('trucosWon').textContent = stats.trucosWon || 0;
+    document.getElementById('floresCantadas').textContent = stats.floresCantadas || 0;
+    document.getElementById('avgTime').textContent = `${Math.round(stats.avgTimePerTurn || 0)}s`;
+    document.getElementById('comodinesUsados').textContent = stats.comodinesUsados || 0;
+    const winRate = (stats.gamesPlayed > 0) ? ((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
     document.getElementById('winPercentage').textContent = `${Math.round(winRate)}%`;
-    
-    // Actualizar barras de progreso
-    document.getElementById('gamesProgress').style.width = `${Math.min((playerStats.gamesPlayed / 50) * 100, 100)}%`;
+    document.getElementById('gamesProgress').style.width = `${Math.min(((stats.gamesPlayed || 0) / 50) * 100, 100)}%`;
     document.getElementById('winRate').style.width = `${winRate}%`;
-    document.getElementById('chicosProgress').style.width = `${Math.min((playerStats.chicosWon / 10) * 100, 100)}%`;
-    document.getElementById('envidosProgress').style.width = `${Math.min((playerStats.envidosWon / 20) * 100, 100)}%`;
-    document.getElementById('trucosProgress').style.width = `${Math.min((playerStats.trucosWon / 30) * 100, 100)}%`;
-    document.getElementById('floresProgress').style.width = `${Math.min((playerStats.floresCantadas / 10) * 100, 100)}%`;
-    document.getElementById('timeProgress').style.width = `${Math.min((15 - playerStats.avgTimePerTurn) / 15 * 100, 100)}%`;
-    document.getElementById('comodinesProgress').style.width = `${Math.min((playerStats.comodinesUsados / 20) * 100, 100)}%`;
+    document.getElementById('chicosProgress').style.width = `${Math.min(((stats.chicosWon || 0) / 10) * 100, 100)}%`;
+    document.getElementById('envidosProgress').style.width = `${Math.min(((stats.envidosWon || 0) / 20) * 100, 100)}%`;
+    document.getElementById('trucosProgress').style.width = `${Math.min(((stats.trucosWon || 0) / 30) * 100, 100)}%`;
+    document.getElementById('floresProgress').style.width = `${Math.min(((stats.floresCantadas || 0) / 10) * 100, 100)}%`;
+    document.getElementById('timeProgress').style.width = `${Math.min((15 - (stats.avgTimePerTurn || 0)) / 15 * 100, 100)}%`;
+    document.getElementById('comodinesProgress').style.width = `${Math.min(((stats.comodinesUsados || 0) / 20) * 100, 100)}%`;
 }
 
-// Cargar tab de cartas
 function loadCardsTab() {
-    const topCards = playerStats.getTopCards(8);
-    const effectiveCards = playerStats.getMostEffectiveCards(8);
-    const envidoCards = playerStats.getTopEnvidoCards(8);
-    
-    // Cartas más jugadas
+    if (!window.playerStats) return;
+    const topCards = window.playerStats.getTopCards ? window.playerStats.getTopCards(8) : [];
+    const effectiveCards = window.playerStats.getMostEffectiveCards ? window.playerStats.getMostEffectiveCards(8) : [];
+    const envidoCards = window.playerStats.getTopEnvidoCards ? window.playerStats.getTopEnvidoCards(8) : [];
     const topCardsDiv = document.getElementById('topCards');
-    topCardsDiv.innerHTML = topCards.map(card => `
-        <div class="card-stat">
-<div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div>
-            <div class="card-info">
-                <h4>${getCardDisplayName(card.card)}</h4>
-                <p>Jugada ${card.count} veces</p>
-            </div>
-        </div>
-    `).join('');
-    
-    // Cartas más efectivas
+    if (topCardsDiv) {
+        topCardsDiv.innerHTML = topCards.length
+            ? topCards.map(card => `<div class="card-stat"><div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div><div class="card-info"><h4>${getCardDisplayName(card.card)}</h4><p>Jugada ${card.count} veces</p></div></div>`).join('')
+            : '<div>No hay datos de cartas jugadas.</div>';
+    }
     const effectiveCardsDiv = document.getElementById('effectiveCards');
-    effectiveCardsDiv.innerHTML = effectiveCards.map(card => `
-        <div class="card-stat">
-<div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div>
-            <div class="card-info">
-                <h4>${getCardDisplayName(card.card)}</h4>
-                <p>${card.wins}/${card.played} victorias (${Math.round(card.ratio * 100)}%)</p>
-            </div>
-        </div>
-    `).join('');
-    
-    // Cartas de envido
+    if (effectiveCardsDiv) {
+        effectiveCardsDiv.innerHTML = effectiveCards.length
+            ? effectiveCards.map(card => `<div class="card-stat"><div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div><div class="card-info"><h4>${getCardDisplayName(card.card)}</h4><p>${card.wins}/${card.played} victorias (${Math.round(card.ratio * 100)}%)</p></div></div>`).join('')
+            : '<div>No hay datos de cartas efectivas.</div>';
+    }
     const envidoCardsDiv = document.getElementById('envidoCards');
-    envidoCardsDiv.innerHTML = envidoCards.map(card => `
-        <div class="card-stat">
-<div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div>
-            <div class="card-info">
-                <h4>${getCardDisplayName(card.card)}</h4>
-                <p>Usada ${card.count} veces en envido</p>
-            </div>
-        </div>
-    `).join('');
+    if (envidoCardsDiv) {
+        envidoCardsDiv.innerHTML = envidoCards.length
+            ? envidoCards.map(card => `<div class="card-stat"><div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div><div class="card-info"><h4>${getCardDisplayName(card.card)}</h4><p>Usada ${card.count} veces en envido</p></div></div>`).join('')
+            : '<div>No hay datos de cartas de envido.</div>';
+    }
 }
 
-// Cargar tab de comodines
 function loadComodinesTab() {
+    if (!window.playerStats) return;
     const allComodines = getAllComodinesList();
     const comodinesGrid = document.getElementById('comodinesGrid');
-    
-    comodinesGrid.innerHTML = allComodines.map(comodin => {
-        const isUnlocked = playerStats.comodinesUnlocked.includes(comodin.id);
-        const timesUsed = playerStats.comodinesUsed[comodin.id] || 0;
-        
-        return `
-            <div class="comodin-card-profile ${isUnlocked ? 'unlocked' : 'locked'}">
-                <div class="comodin-header">
-                    <div class="comodin-icon">${getComodinIcon(comodin.id)}</div>
-                    <div class="comodin-title">
-                        <h4>${comodin.nombre}</h4>
-                        <p>${isUnlocked ? 'Desbloqueado' : 'Bloqueado'}</p>
-                    </div>
-                </div>
-                <div class="comodin-desc">${comodin.desc}</div>
-                <div class="comodin-stats">
-                    <span>Usado: ${timesUsed} veces</span>
-                    <span>${isUnlocked ? '✅' : '🔒'}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
+    if (comodinesGrid) {
+        comodinesGrid.innerHTML = allComodines.map(comodin => {
+            const isUnlocked = window.playerStats.comodinesUnlocked.includes(comodin.id);
+            const timesUsed = window.playerStats.comodinesUsed[comodin.id] || 0;
+            return `<div class="comodin-card-profile ${isUnlocked ? 'unlocked' : 'locked'}"><div class="comodin-header"><div class="comodin-icon">${getComodinIcon(comodin.id)}</div><div class="comodin-title"><h4>${comodin.nombre}</h4><p>${isUnlocked ? 'Desbloqueado' : 'Bloqueado'}</p></div></div><div class="comodin-desc">${comodin.desc}</div><div class="comodin-stats"><span>Usado: ${timesUsed} veces</span><span>${isUnlocked ? '✅' : '🔒'}</span></div></div>`;
+        }).join('');
+    }
 }
 
-// Cargar tab de logros
 function loadAchievementsTab() {
+    if (!window.playerStats) return;
     const achievementsList = document.getElementById('achievementsList');
     const allAchievements = getAllAchievementsList();
-    
-    achievementsList.innerHTML = allAchievements.map(achievement => {
-        const isUnlocked = playerStats.achievements[achievement.id]?.unlocked || false;
-        
-        return `
-            <div class="achievement ${isUnlocked ? 'unlocked' : ''}">
-                <div class="achievement-icon">${achievement.icon}</div>
-                <div class="achievement-info">
-                    <h4>${achievement.name}</h4>
-                    <p>${achievement.desc}</p>
-                </div>
-            </div>
-        `;
-    }).join('');
+    if (achievementsList) {
+        achievementsList.innerHTML = allAchievements.map(achievement => {
+            const isUnlocked = window.playerStats.achievements[achievement.id]?.unlocked || false;
+            return `<div class="achievement ${isUnlocked ? 'unlocked' : ''}"><div class="achievement-icon">${achievement.icon}</div><div class="achievement-info"><h4>${achievement.name}</h4><p>${achievement.desc}</p></div></div>`;
+        }).join('');
+    }
 }
 
 // Funciones auxiliares
@@ -569,8 +609,21 @@ document.head.appendChild(style);
 
 // Cargar estadísticas al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-    loadStatsTab();
+    waitForAuthAndStats().then(() => {
+        // Solo ahora playerStats está seguro de existir
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                showTab(this.dataset.tab);
+            });
+        });
+
+        // Ahora sí se puede llamar a showTab
+        showTab('stats');
+    });
 });
+
+
 
 // Funciones globales para manejo de estadísticas
 window.exportStats = function() {
@@ -610,9 +663,4 @@ window.clearStats = function() {
             alert('❌ Error eliminando estadísticas');
         }
     }
-};
-
-// Exportar para uso en otros archivos
-if (!window.playerStats) {
-    window.playerStats = playerStats;
-} 
+}; 
