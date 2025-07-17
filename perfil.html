@@ -14,16 +14,19 @@
     margin: 0 auto;
     padding: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #fffbe6 60%, #e8f5e8 100%);
+    border-radius: 24px;
+    box-shadow: 0 8px 48px rgba(34, 153, 80, 0.15);
 }
 
 .profile-header {
-    background: linear-gradient(135deg, #2a3560 0%, #4a5a8a 100%);
+    background: linear-gradient(135deg, #2760 0%, #229954 100%);
     color: white;
     padding: 30px;
     border-radius: 15px;
     margin-bottom: 30px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 32px rgba(34, 153, 80, 0.3);
 }
 
 .profile-avatar {
@@ -62,24 +65,54 @@
     background: white;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    border-left: 4px solid #4a5a8a;
+    box-shadow: 0 4px 16px rgba(34, 153, 80, 0.1);
+    border-left: 4px solid #27ae60;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #27ae60, #229954);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 153, 80, 0.2);
 }
 
 .stat-card h3 {
     margin: 0 0 15px 0;
-    color: #2a3560;
+    color: #229954;
     font-size: 1.3em;
     display: flex;
     align-items: center;
     gap: 10px;
+    font-weight: bold;
 }
 
 .stat-value {
     font-size: 2em;
     font-weight: bold;
-    color: #4a5a8a;
+    color: #27ae60;
     margin: 10px 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #27ae60, #229954);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stat-bar {
@@ -88,19 +121,21 @@
     border-radius: 4px;
     overflow: hidden;
     margin: 10px 0;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .stat-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4a5a8a, #6b7bb3);
+    background: linear-gradient(90deg, #27ae60, #229954);
     transition: width 0.3s ease;
+    box-shadow: 0 4px 16px rgba(34, 153, 80, 0.1);
 }
 
 .cards-section {
     background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(34, 153, 80, 0.1);
     margin-bottom: 30px;
 }
 
@@ -118,7 +153,12 @@
     padding: 15px;
     background: #f8f9fa;
     border-radius: 8px;
-    border-left: 3px solid #4a5a8a;
+    border-left: 3px solid #27ae60;
+    transition: transform 0.2s ease;
+}
+
+.card-stat:hover {
+    transform: translateX(5px);
 }
 
 .card-image {
@@ -133,11 +173,13 @@
     color: #666;
     background-size: cover;
     background-position: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .card-info h4 {
     margin: 0 0 5px 0;
-    color: #2a3560;
+    color: #229954;
+    font-weight: bold;
 }
 
 .card-info p {
@@ -150,7 +192,7 @@
     background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(34, 153, 80, 0.1);
     margin-bottom: 30px;
 }
 
@@ -208,7 +250,7 @@
     width: 50px;
     height: 50px;
     border-radius: 8px;
-    background: linear-gradient(45deg, #4a5a8a, #6b7bb3);
+    background: linear-gradient(45deg, #27ae60, #229954);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -218,8 +260,9 @@
 
 .comodin-title h4 {
     margin: 0;
-    color: #2a3560;
+    color: #229954;
     font-size: 1.1em;
+    font-weight: bold;
 }
 
 .comodin-title p {
@@ -246,11 +289,12 @@
     gap: 15px;
     justify-content: center;
     margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
 .nav-btn {
     padding: 12px 24px;
-    background: linear-gradient(135deg, #4a5a8a, #6b7bb3);
+    background: linear-gradient(135deg, #27ae60, #229954);
     color: white;
     border: none;
     border-radius: 8px;
@@ -259,18 +303,19 @@
     transition: all 0.3s ease;
     text-decoration: none;
     display: inline-block;
+    font-weight: bold;
 }
 
 .nav-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(34, 153, 80, 0.3);
 }
 
 .progress-section {
     background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(34, 153, 80, 0.1);
     margin-bottom: 30px;
 }
 
@@ -283,6 +328,7 @@
     border-radius: 8px;
     margin-bottom: 10px;
     border-left: 3px solid #e9ecef;
+    transition: all 0.3s ease;
 }
 
 .achievement.unlocked {
@@ -308,7 +354,8 @@
 
 .achievement-info h4 {
     margin: 0 0 5px 0;
-    color: #2a3560;
+    color: #229954;
+    font-weight: bold;
 }
 
 .achievement-info p {
@@ -335,10 +382,11 @@
     cursor: pointer;
     font-size: 1em;
     transition: all 0.3s ease;
+    font-weight: bold;
 }
 
 .tab.active {
-    background: #4a5a8a;
+    background: #27ae60;
     color: white;
 }
 
@@ -366,6 +414,16 @@
     .profile-name {
         font-size: 2em;
     }
+    
+    .nav-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        max-width: 300px;
+    }
 }
 </style>
 </head>
@@ -377,6 +435,7 @@
         <a href="truco-roguelike.html" class="nav-btn">🎴 Jugar</a>
         <a href="trucovanilla.html" class="nav-btn">🎯 Truco Vanilla</a>
         <a href="index.html" class="nav-btn">🏠 Inicio</a>
+        <button onclick="refreshStats()" class="nav-btn">🔄 Refrescar</button>
         <button onclick="exportStats()" class="nav-btn">📤 Exportar</button>
         <button onclick="importStats()" class="nav-btn">📥 Importar</button>
         <button onclick="clearStats()" class="nav-btn">🗑️ Limpiar</button>

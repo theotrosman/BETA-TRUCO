@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang=es>
+<head>
+    <meta charset="UTF-8> <title>Test Estadísticas - Truco Roguelike</title>
+    <meta name=viewport" content="width=device-width, initial-scale=1>
+    <link rel="stylesheet href="styles.css">
+    <style>
+        body [object Object]       font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135eg, #fffbe660%, #e8f5e8 100            margin: 0;
+            padding: 20px;
+        }
+        .test-container[object Object]         max-width: 800            margin: 0 auto;
+            background: white;
+            border-radius:15           padding:30x;
+            box-shadow: 0 8 32x rgba(34, 153, 800.15
+        }
+        .test-button {
+            background: linear-gradient(135deg, #279954
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px24            margin:10            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2);
+            box-shadow: 0 4 12x rgba(3480, 0.3);
+        }
+        .test-result {
+            background: #f8            border-radius: 8px;
+            padding:15            margin: 10            border-left:4px solid #27
+        }
+        .test-result.success {
+            border-left-color: #28        background: #d4edda;
+        }
+        .test-result.error {
+            border-left-color: #dc3545;
+            background: #f8d7;
+        }
+    </style>
+</head>
+<body>
+    <div class=test-container">
+        <h1st de Estadísticas</h1    <p>Esta página te permite probar el sistema de estadísticas del juego.</p>
+        
+        <div>
+            <button class="test-button" onclick="testAuth()>🔐Test Autenticación</button>
+            <button class="test-button" onclick="testStats()">📊 Test Estadísticas</button>
+            <button class="test-button" onclick="testSave()>💾 Test Guardado</button>
+            <button class="test-button" onclick="testLoad()">📥 Test Carga</button>
+            <button class="test-button onclick="addTestData()">➕ Agregar Datos de Prueba</button>
+            <button class="test-button" onclick=clearTestData()">🗑️ Limpiar Datos</button>
+        </div>
+        
+        <div id="results></div>
+    </div>
+
+    <script type="module">
+        import { authManager } from './auth.js';
+        import ./firebase-config.js';
+        import './perfil.js';
+        
+        window.authManager = authManager;
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        window.testAuth = async function()[object Object]            try[object Object]               addResult('🔄 Probando autenticación...');
+                const user = authManager.getCurrentUser();
+                if (user) {
+                    addResult(`✅ Usuario autenticado: ${user.email}`, 'success');
+                } else {
+                    addResult(⚠️No hay usuario autenticado', 'error');
+                }
+            } catch (error)[object Object]               addResult(`❌ Error en autenticación: ${error.message}`, 'error);         }
+        };
+        
+        window.testStats = async function()[object Object]            try[object Object]               addResult(🔄 Probando estadísticas...');
+                if (window.playerStats) {
+                    addResult(`✅ PlayerStats disponible: ${JSON.stringify(window.playerStats)}`, 'success');
+                } else {
+                    addResult(⚠️ PlayerStats no disponible', 'error');
+                }
+            } catch (error)[object Object]               addResult(`❌ Error en estadísticas: ${error.message}`, 'error);         }
+        };
+        
+        window.testSave = async function()[object Object]            try[object Object]               addResult(🔄 Probando guardado...');
+                if (window.playerStats) {
+                    await window.playerStats.saveStats();
+                    addResult('✅ Estadísticas guardadas correctamente', 'success');
+                } else {
+                    addResult(⚠️ PlayerStats no disponible para guardar', 'error');
+                }
+            } catch (error)[object Object]               addResult(`❌ Error guardando: ${error.message}`, 'error);         }
+        };
+        
+        window.testLoad = async function()[object Object]            try[object Object]               addResult(🔄 Probando carga...');
+                if (window.playerStats) {
+                    await window.playerStats.loadStats();
+                    addResult('✅ Estadísticas cargadas correctamente', 'success');
+                } else {
+                    addResult(⚠️ PlayerStats no disponible para cargar', 'error');
+                }
+            } catch (error)[object Object]               addResult(`❌ Error cargando: ${error.message}`, 'error);         }
+        };
+        
+        window.addTestData = async function()[object Object]            try[object Object]               addResult('🔄 Agregando datos de prueba...');
+                if (window.playerStats) {
+                    // Simular algunos datos de juego
+                    window.playerStats.gamesPlayed += 5;
+                    window.playerStats.gamesWon += 3;
+                    window.playerStats.chicosWon += 2;
+                    window.playerStats.envidosWon += 4;
+                    window.playerStats.trucosWon += 6;
+                    window.playerStats.floresCantadas += 1;
+                    window.playerStats.comodinesUsados += 3;
+                    
+                    await window.playerStats.saveStats();
+                    addResult(✅ Datos de prueba agregados correctamente', 'success');
+                } else {
+                    addResult(⚠️ PlayerStats no disponible', 'error');
+                }
+            } catch (error)[object Object]               addResult(`❌ Error agregando datos: ${error.message}`, 'error);         }
+        };
+        
+        window.clearTestData = async function()[object Object]            try[object Object]               addResult('🔄 Limpiando datos...');
+                if (window.playerStats) {
+                    await window.playerStats.initializeDefaultStats();
+                    addResult(✅ Datos limpiados correctamente', 'success');
+                } else {
+                    addResult(⚠️ PlayerStats no disponible', 'error');
+                }
+            } catch (error)[object Object]               addResult(`❌ Error limpiando datos: ${error.message}`, 'error);         }
+        };
+        
+        // Inicializar cuando la página cargue
+        document.addEventListener('DOMContentLoaded', () =>[object Object]         addResult('🚀 Página de prueba cargada');
+        });
+    </script>
+</body>
+</html> 

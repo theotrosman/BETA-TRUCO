@@ -1,56 +1,181 @@
-# 🧉 Truco Roguelike 8BIT — Versión 07 `v07-MULTpc-lo-v3` - [Sitio WEB de TEST](https://theotrosman.github.io/TRUKEADOS/)
+# Truco Roguelike - Sistema de Estadísticas Mejorado
+[Sitio WEB de TEST](https://theotrosman.github.io/TRUKEADOS/)
 
-¡Bienvenid@ a la versión más completa hasta ahora del Truco más criollo y desafiante del multiverso pixelado!
+## 🎯 Descripción
+
+Este proyecto es un juego de Truco Argentino con elementos roguelike y un sistema de estadísticas completo y sincronizado con Firebase.
+
+## ✨ Características Principales
+
+### 🎮 Juego
+- **Truco Argentino clásico** con reglas completas
+- **Modo Roguelike** con elementos progresivos
+- **Sistema de comodines** con efectos especiales
+- **IA adaptativa** que mejora con el tiempo
+
+### 📊 Sistema de Estadísticas
+- **Sincronización en tiempo real** con Firebase
+- **Estadísticas detalladas** de partidas, victorias, chicos, envidos, trucos
+- **Seguimiento de cartas** más jugadas y efectivas
+- **Sistema de logros** desbloqueables
+- **Niveles de jugador** basados en rendimiento
+- **Historial de partidas** completo
+
+### 🎨 Interfaz Mejorada
+- **Diseño moderno** con gradientes y animaciones
+- **Colores consistentes** (verde/azul)
+- **Responsive design** para móviles y desktop
+- **Animaciones suaves** y efectos hover
+- **Barras de progreso** visuales
+
+## 🚀 Cómo Usar
+
+### 1. Configuración Inicial
+```bash
+# Clonar el repositorio
+git clone [url-del-repositorio]
+
+# Abrir en el navegador
+# Asegúrate de tener configurado Firebase
+```
+
+### 2ugar
+- **Truco Vanilla**: Modo clásico sin elementos roguelike
+- **Truco Roguelike**: Modo con comodines y progresión
+- **Perfil**: Ver estadísticas y logros
+
+###3 Estadísticas
+- **Pestaña Estadísticas**: Resumen general del rendimiento
+- **Pestaña Cartas**: Análisis de cartas más jugadas
+- **Pestaña Comodines**: Comodines desbloqueados y usados
+- **Pestaña Logros**: Logros conseguidos
+
+## 🔧 Archivos Principales
+
+### Frontend
+- `index.html` - Página principal
+- `truco-roguelike.html` - Juego principal
+- `trucovanilla.html` - Modo clásico
+- `perfil.html` - Sistema de estadísticas
+- `test-stats.html` - Página de pruebas
+
+### JavaScript
+- `main.js` - Lógica principal del juego
+- `perfil.js` - Sistema de estadísticas
+- `auth.js` - Autenticación con Firebase
+- `stats-config.js` - Configuración de estadísticas
+
+### Estilos
+- `styles.css` - Estilos principales
+- `mazo-selector.css` - Estilos del selector de mazos
+
+## 📊 Sistema de Estadísticas
+
+### Estadísticas Rastreadas
+- **Partidas jugadas** y ganadas
+- **Chicos, envidos, trucos** ganados
+- **Flores cantadas**
+- **Tiempo promedio** por turno
+- **Comodines usados**
+- **Cartas más jugadas** y efectivas
+
+### Niveles de Jugador1. **Novato** (0puntos)2. **Principiante** (100-299puntos)3. **Intermedio** (300-599puntos)4 **Avanzado** (600-999puntos)
+5. **Experto** (1001999ntos)
+6. **Maestro** (2003999untos)7. **Legendario** (4007999untos)
+8. **Mítico** (8000+ puntos)
+
+### Logros Disponibles
+- Primera victoria
+- Rachas ganadoras
+- Maestro de cartas
+- Estratega (70+ victorias)
+- Rápido como el viento
+- Y muchos más...
+
+## 🎭 Comodines
+
+### Comodines Básicos
+- **Palo Único**: Solo cartas de un palo
+- **Desempate Criollo**: Ganar empates
+- **Mate Cocido**: Fusionar cartas iguales
+- **Flor Falsa**: Declarar flor con 3el mismo palo
+
+### Comodines Avanzados
+- **Dominio Ilusorio**: Cambiar palos temporalmente
+- **Triple Milagro**: Destruir cartas por poderosas
+- **Gaucho Invisible**: Ocultar jugadas
+- **Y muchos más...**
+
+## 🔥 Características Técnicas
+
+### Firebase Integration
+- **Autenticación** con email/password
+- **Firestore** para estadísticas
+- **Sincronización automática**
+- **Respaldo de datos**
+
+### Performance
+- **Carga asíncrona** de estadísticas
+- **Guardado automático** cada 30 segundos
+- **Validación de datos** integrada
+- **Manejo de errores** robusto
+
+### UX/UI
+- **Animaciones CSS** suaves
+- **Feedback visual** inmediato
+- **Diseño responsive**
+- **Accesibilidad** mejorada
+
+## 🐛 Solución de Problemas
+
+### Estadísticas no aparecen
+1Verificar conexión a Firebase2. Revisar autenticación del usuario
+3. Usar `test-stats.html` para diagnosticar
+
+### Datos no se guardan
+1. Verificar permisos de Firestore
+2. Revisar configuración de Firebase
+3Verificar conexión a internet
+
+### Errores de carga
+1. Limpiar caché del navegador2Verificar archivos JavaScript
+3evisar consola del navegador
+
+## 📝 Changelog
+
+### v2.0 - Sistema de Estadísticas Mejorado
+- ✅ **Estadísticas sincronizadas** con Firebase
+- ✅ **Interfaz moderna** con colores consistentes
+- ✅ **Sistema de niveles** mejorado
+- ✅ **Logros desbloqueables**
+- ✅ **Barras de progreso** visuales
+- ✅ **Animaciones y efectos** mejorados
+- ✅ **Página de pruebas** para debugging
+- ✅ **Manejo de errores** robusto
+
+### v1.0- Versión Base
+- Juego de Truco funcional
+- Sistema básico de estadísticas
+- Comodines básicos
+
+## 🤝 Contribuir
+
+1. Fork el proyecto2rear una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abrir un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
+
+## 🙏 Agradecimientos
+
+- Comunidad de Truco Argentino
+- Firebase por la infraestructura
+- Contribuidores del proyecto
 
 ---
 
-## 🚀 ¿Qué hay de nuevo en la v07? 
-
-### 🔸 Perfil de Jugador
-- Visualizá tu avatar, nombre y energía gaucha actual.
-- Tu progreso queda registrado en cada run.
-- Tu historial forma parte del legado criollo.
-
-### 🍔 Nuevo Menú Hamburger
-- Accesible en todo momento.
-- Animación 8bit con sabor a manteca pixelada.
-- Opciones rápidas: Volver a la Grilla, Ver estadísticas, Reiniciar run.
-
-### 🃏 Mejora del Core del Truco Roguelike
-- Rebalanceo de dificultad por piso.
-- Mejores timings en los cantos de Truco y Envido.
-- Nuevas animaciones y efectos para cartas clave (Anchos, 7s, etc).
-
-### 📊 Sistema de Estadísticas COMPLETAMENTE IMPLEMENTADO
-- Visualización de:
-  - Runs completadas
-  - Fichas de mate recolectadas
-  - Patrones vencidos
-  - Cantidad de Envidos y Trucos ganados
-- Todo presentado en un estilo **retro gauge**.
-
-
----
-
-## 📜 Copyright 
-
-© 2025 Theo Trosman, Alan Vitas y Sebastián Calviño. Todos los derechos reservados.
-
-Este proyecto, titulado **"Truco Roguelike"**, es una obra original desarrollada por Theo Trosman, Alan Vitas y Sebastián Calviño como parte de una iniciativa educativa, lúdica y cultural, destinada a reinterpretar el tradicional juego de Truco argentino bajo una mecánica inspirada en el género *roguelike*. El código fuente, los diseños visuales, las animaciones, los recursos gráficos y sonoros, así como la estructura narrativa y mecánica del juego, son de autoría propia salvo que se indique expresamente lo contrario.
-
-Queda **estrictamente prohibida** cualquier forma de reproducción total o parcial, redistribución, modificación, comercialización o uso no autorizado del material incluido en este repositorio sin el consentimiento previo, expreso y por escrito del autor. Esta prohibición incluye pero no se limita a: clonación del repositorio con fines comerciales, publicación en plataformas de terceros sin atribución, inclusión en bundles de juegos sin autorización o el uso del código con propósitos distintos a los educativos o personales.
-
-El autor se reserva el derecho de emprender acciones legales en caso de incumplimiento de estos términos, conforme a las leyes nacionales e internacionales sobre derechos de autor (incluyendo pero no limitándose a la Ley 11.723 de la República Argentina y tratados internacionales como la Convención de Berna y los acuerdos de la OMPI).
-
-Este proyecto NO está afiliado ni tiene vínculos oficiales con entidades que comercialicen el juego de Truco, ni con desarrolladores de juegos de mesa, ni con plataformas de apuestas o juegos de azar. La inclusión del Truco como base lúdica tiene una finalidad cultural y educativa, sin ánimo de lucro, en el marco de una reinterpretación experimental.
-
-Todos los recursos visuales y sonoros externos utilizados (cartas, efectos, íconos, sonidos de ambiente o UI) han sido debidamente adaptados o generados, y, en caso de provenir de fuentes libres, se cita su origen y licencia correspondiente en los créditos del juego o en la documentación anexa.
-
-El uso personal, no comercial y con fines educativos está **permitido y fomentado**, siempre que se mantenga la atribución correspondiente a los autores originales (**Theo Trosman, Alan Vitas y Sebastián calviño**) y no se altere el espíritu del proyecto. Se agradece especialmente a quienes deseen compartir mejoras, ideas, feedback o contribuir con el desarrollo de nuevas mecánicas manteniendo la integridad del juego y su identidad cultural.
-
----
-
-🧉 *El mate es nuestro, el truco también. Pero el código... ese tiene dueño.*  
-
-https://github.com/user-attachments/assets/8d6ceff8-f7e7-42a3-8ace-d936a77835f3
+**¡Disfruta jugando Truco Roguelike! 🎴**
 
