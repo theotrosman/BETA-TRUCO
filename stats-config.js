@@ -1,24 +1,14 @@
 // Configuración del sistema de estadísticas
 const STATS_CONFIG = {
-    // Clave para localStorage
     STORAGE_KEY: 'trucoPlayerStats',
-    
-    // Configuración de persistencia
-    AUTO_SAVE_INTERVAL: 30000, // 30 segundos
-    
-    // Configuración de respaldo
+    AUTO_SAVE_INTERVAL: 30000,
     BACKUP_ENABLED: true,
     BACKUP_KEY: 'trucoPlayerStatsBackup',
-    
-    // Configuración de sincronización (para futuras implementaciones)
     SYNC_ENABLED: false,
-    SYNC_INTERVAL: 60000, // 1 minuto
-    
-    // Configuración de estadísticas de la CPU
+    SYNC_INTERVAL: 60000,
     CPU_STATS_ENABLED: true,
     CPU_STATS_KEY: 'trucoCPUStats',
     
-    // Configuración de logros
     ACHIEVEMENTS: {
         'first_win': { name: 'Primera Victoria', desc: 'Gana tu primera partida', condition: (stats) => stats.gamesWon >= 1 },
         'win_streak_3': { name: 'Racha Ganadora', desc: 'Gana 3 partidas seguidas', condition: (stats) => stats.getCurrentWinStreak() >= 3 },
@@ -41,7 +31,6 @@ const STATS_CONFIG = {
         'truco_master': { name: 'Maestro del Truco', desc: 'Gana un vale cuatro', condition: (stats) => stats.hasWonValeCuatro() }
     },
     
-    // Configuración de niveles
     LEVELS: {
         'novato': { min: 0, max: 9, name: 'Novato' },
         'principiante': { min: 10, max: 24, name: 'Principiante' },
@@ -53,14 +42,10 @@ const STATS_CONFIG = {
         'mitico': { min: 1000, max: Infinity, name: 'Mítico' }
     },
     
-    // Configuración de estadísticas de la CPU
     CPU_STATS: {
-        // Dificultad dinámica basada en el rendimiento del jugador
         DIFFICULTY_ADJUSTMENT: true,
         MIN_DIFFICULTY: 0.3,
         MAX_DIFFICULTY: 0.9,
-        
-        // Estadísticas que se guardan de la CPU
         TRACK_WINS: true,
         TRACK_LOSSES: true,
         TRACK_AVG_TIME: true,
@@ -70,17 +55,13 @@ const STATS_CONFIG = {
 
 // Utilidades para el manejo de estadísticas
 const StatsUtils = {
-    // Guardar estadísticas con respaldo
     saveStats: function(stats) {
         try {
             const statsString = JSON.stringify(stats);
             localStorage.setItem(STATS_CONFIG.STORAGE_KEY, statsString);
-            
-            // Crear respaldo
             if (STATS_CONFIG.BACKUP_ENABLED) {
                 localStorage.setItem(STATS_CONFIG.BACKUP_KEY, statsString);
             }
-            
             console.log('✅ Estadísticas guardadas correctamente');
             return true;
         } catch (error) {
@@ -89,25 +70,20 @@ const StatsUtils = {
         }
     },
     
-    // Cargar estadísticas con recuperación de respaldo
     loadStats: function() {
         try {
             let statsString = localStorage.getItem(STATS_CONFIG.STORAGE_KEY);
-            
-            // Si no hay datos principales, intentar con el respaldo
             if (!statsString && STATS_CONFIG.BACKUP_ENABLED) {
                 statsString = localStorage.getItem(STATS_CONFIG.BACKUP_KEY);
                 if (statsString) {
                     console.log('🔄 Recuperando estadísticas desde respaldo');
                 }
             }
-            
             if (statsString) {
                 const stats = JSON.parse(statsString);
                 console.log('✅ Estadísticas cargadas correctamente');
                 return stats;
             }
-            
             return null;
         } catch (error) {
             console.error('❌ Error cargando estadísticas:', error);
@@ -115,7 +91,6 @@ const StatsUtils = {
         }
     },
     
-    // Limpiar estadísticas
     clearStats: function() {
         try {
             localStorage.removeItem(STATS_CONFIG.STORAGE_KEY);
@@ -130,72 +105,8 @@ const StatsUtils = {
         }
     },
     
-    // Exportar estadísticas
-    exportStats: function() {
-        try {
-            const stats = this.loadStats();
-            if (stats) {
-                const dataStr = JSON.stringify(stats, null, 2);
-                const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `truco-stats-${new Date().toISOString().split('T')[0]}.json`;
-                link.click();
-                URL.revokeObjectURL(url);
-                console.log('📤 Estadísticas exportadas');
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('❌ Error exportando estadísticas:', error);
-            return false;
-        }
-    },
-    
-    // Importar estadísticas
-    importStats: function(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const stats = JSON.parse(e.target.result);
-                    if (StatsUtils.saveStats(stats)) {
-                        console.log('📥 Estadísticas importadas correctamente');
-                        resolve(true);
-                    } else {
-                        reject(new Error('Error guardando estadísticas importadas'));
-                    }
-                } catch (error) {
-                    reject(new Error('Error parseando archivo de estadísticas'));
-                }
-            };
-            reader.onerror = () => reject(new Error('Error leyendo archivo'));
-            reader.readAsText(file);
-        });
-    },
-    
-    // Verificar integridad de estadísticas
-    validateStats: function(stats) {
-        const requiredFields = [
-            'gamesPlayed', 'gamesWon', 'chicosWon', 'envidosWon', 
-            'trucosWon', 'floresCantadas', 'comodinesUsados'
-        ];
-        
-        for (const field of requiredFields) {
-            if (typeof stats[field] !== 'number' || stats[field] < 0) {
-                console.warn(`⚠️ Campo inválido en estadísticas: ${field}`);
-                return false;
-            }
-        }
-        
-        return true;
-    },
-    
-    // Calcular nivel del jugador
     calculateLevel: function(stats) {
         const totalGames = stats.gamesPlayed || 0;
-        
         for (const [level, config] of Object.entries(STATS_CONFIG.LEVELS)) {
             if (totalGames >= config.min && totalGames <= config.max) {
                 return {
@@ -207,7 +118,6 @@ const StatsUtils = {
                 };
             }
         }
-        
         return {
             level: 'mitico',
             name: 'Mítico',

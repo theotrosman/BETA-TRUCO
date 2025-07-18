@@ -47,8 +47,6 @@ class PlayerStats {
 
     // Inicializar estadísticas por defecto
     async initializeDefaultStats() {
-        console.log('🔄 Inicializando estadísticas por defecto...');
-        
         this.gamesPlayed = 0;
         this.gamesWon = 0;
         this.chicosWon = 0;
@@ -66,8 +64,8 @@ class PlayerStats {
         this.cardsEnvido = {};
         this.cardsTruco = {};
         
-        // Comodines desbloqueados (algunos básicos)
-        this.comodinesUnlocked = ['palo_unico', 'desempate_criollo'];
+        // Comodines desbloqueados
+        this.comodinesUnlocked = [];
         this.comodinesUsed = {};
         
         // Logros
@@ -85,7 +83,6 @@ class PlayerStats {
         };
         
         await this.saveStats();
-        console.log('✅ Estadísticas por defecto inicializadas');
     }
 
     // Guardar estadísticas en Firestore
@@ -120,13 +117,6 @@ class PlayerStats {
         await authManager.updateUserProfile(this.userId, { stats: statsData });
     }
     
-    // Refrescar estadísticas desde la base de datos
-    async refreshStats() {
-        console.log('🔄 Refrescando estadísticas...');
-        await this.loadStats();
-        console.log('✅ Estadísticas refrescadas');
-    }
-
     // Configurar guardado automático
     setupAutoSave() {
         if (STATS_CONFIG.AUTO_SAVE_INTERVAL > 0) {
@@ -259,6 +249,7 @@ class PlayerStats {
 
     // Métodos auxiliares para logros
     getCurrentWinStreak() {
+        if (!this.gameHistory || this.gameHistory.length === 0) return 0;
         let streak = 0;
         for (let i = this.gameHistory.length - 1; i >= 0; i--) {
             if (this.gameHistory[i].result.won) {
@@ -271,32 +262,28 @@ class PlayerStats {
     }
 
     hasPerfectGame() {
-        // Buscar en el historial una partida perfecta
-        return this.gameHistory.some(game => game.result.perfectGame);
+        return this.gameHistory && this.gameHistory.some(game => game.result.won && game.result.perfectGame);
     }
 
     hasComebackWin() {
-        // Buscar en el historial una victoria por comeback
-        return this.gameHistory.some(game => game.result.comebackWin);
+        return this.gameHistory && this.gameHistory.some(game => game.result.won && game.result.comeback);
     }
 
     hasPlayedAllCards() {
+        if (!this.cardsPlayed) return false;
         const allCards = ['1espada', '1basto', '1oro', '1copa', '2espada', '2basto', '2oro', '2copa', 
-                         '3espada', '3basto', '3oro', '3copa', '4espada', '4basto', '4oro', '4copa',
-                         '5espada', '5basto', '5oro', '5copa', '6espada', '6basto', '6oro', '6copa',
-                         '7espada', '7basto', '7oro', '7copa', '10espada', '10basto', '10oro', '10copa',
-                         '11espada', '11basto', '11oro', '11copa', '12espada', '12basto', '12oro', '12copa'];
-        return allCards.every(card => this.cardsPlayed[card] > 0);
+                         '3espada', '3basto', '3oro', '3copa', '7espada', '7basto', '7oro', '7copa',
+                         '10espada', '10basto', '10oro', '10copa', '11espada', '11basto', '11oro', '11copa',
+                         '12espada', '12basto', '12oro', '12copa'];
+        return allCards.every(card => this.cardsPlayed[card] && this.cardsPlayed[card] > 0);
     }
 
     hasHighEnvido() {
-        // Buscar en el historial un envido alto
-        return this.gameHistory.some(game => game.result.highEnvido);
+        return this.gameHistory && this.gameHistory.some(game => game.result.envidosWon && game.result.highEnvido);
     }
 
     hasWonValeCuatro() {
-        // Buscar en el historial una victoria en vale cuatro
-        return this.gameHistory.some(game => game.result.valeCuatroWin);
+        return this.gameHistory && this.gameHistory.some(game => game.result.trucosWon && game.result.valeCuatro);
     }
 
     // Mostrar notificación de logro
@@ -309,67 +296,50 @@ class PlayerStats {
             background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
             padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            z-index: 10000;
-            animation: slideIn 0.5s ease-out;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         `;
         notification.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 5px;">🏆 ¡Logro Desbloqueado!</div>
-            <div>${achievementName}</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.5em;">🏆</span>
+                <div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">¡Logro Desbloqueado!</div>
+                    <div style="font-size: 0.9em;">${achievementName}</div>
+                </div>
+            </div>
         `;
         
         document.body.appendChild(notification);
         
         setTimeout(() => {
-            notification.style.animation = 'slideOut 0.5s ease-in';
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 500);
-        }, 3000);
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
     }
 
     // Obtener nivel del jugador
     getPlayerLevel() {
-        const totalGames = this.gamesPlayed || 0;
-        const totalWins = this.gamesWon || 0;
-        const totalChicos = this.chicosWon || 0;
-        const totalEnvidos = this.envidosWon || 0;
-        const totalTrucos = this.trucosWon || 0;
-        
-        // Calcular puntuación total
-        const score = totalGames *10+ totalWins * 20 + totalChicos * 5 + totalEnvidos * 3 + totalTrucos * 2;
-        
-        // Determinar nivel basado en la puntuación
-        let level, name;
-        
-        if (score < 100) {
-            level = 1;
-            name = 'Novato';
-        } else if (score < 300) {
-            level = 2;
-            name = 'Principiante';
-        } else if (score < 600) {
-            level = 3;
-            name = 'Intermedio';
-        } else if (score < 1000) {
-            level = 4;
-            name = 'Avanzado';
-        } else if (score < 2000) {
-            level = 5;
-            name = 'Experto';
-        } else if (score < 4000) {
-            level = 6;
-            name = 'Maestro';
-        } else if (score < 8000) {
-            level = 7;
-            name = 'Legendario';
-        } else {
-            level = 8;
-            name = 'Mítico';
-        }
-        
-        return { level, name, score };
+        const level = StatsUtils.calculateLevel(this);
+        return {
+            level: level.level,
+            name: level.name,
+            current: level.current,
+            next: level.next,
+            progress: level.progress
+        };
     }
 
     // Obtener cartas más jugadas
@@ -412,30 +382,21 @@ async function waitForAuthAndStats() {
             try {
                 const user = authManager.getCurrentUser();
                 if (user) {
-                    console.log('✅ Usuario autenticado:', user.uid);
-                    
                     if (!window.playerStats) {
-                        console.log('🔄 Inicializando PlayerStats...');
                         window.playerStats = new PlayerStats();
                         await window.playerStats.loadStats();
-                        console.log('✅ PlayerStats inicializado correctamente');
+                        
+                        if (!window.playerStats.gamesPlayed && window.playerStats.gamesPlayed !== 0) {
+                            await window.playerStats.initializeDefaultStats();
+                        }
                     }
-                    
-                    // Verificar que las estadísticas se cargaron correctamente
-                    if (window.playerStats && typeof window.playerStats.gamesPlayed === 'number') {
-                        console.log('✅ Estadísticas cargadas:', window.playerStats);
-                        resolve();
-                    } else {
-                        console.warn('⚠️ Estadísticas no válidas, reintentando...');
-                        setTimeout(check, 500);
-                    }
+                    resolve();
                 } else {
-                    console.log('⏳ Esperando autenticación...');
                     setTimeout(check, 200);
                 }
             } catch (error) {
-                console.error('❌ Error en waitForAuthAndStats:', error);
-                setTimeout(check, 1000);
+                console.error('Error en waitForAuthAndStats:', error);
+                setTimeout(check, 200);
             }
         };
         check();
@@ -443,199 +404,160 @@ async function waitForAuthAndStats() {
 }
 
 function showTab(tabName) {
-    console.log('🔄 Cambiando a pestaña:', tabName);
+    console.log('showTab llamado con:', tabName);
     
-    // Ocultar todos los contenidos
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-    
-    // Quitar activo de todos los botones
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Mostrar el contenido correcto
     const tabContent = document.getElementById(tabName);
     if (tabContent) {
         tabContent.classList.add('active');
+        console.log('Tab content activado:', tabName);
+    } else {
+        console.error('No se encontró el tab content:', tabName);
     }
     
-    // Activar el botón correcto
     const btn = document.querySelector(`.tab[onclick*="${tabName}"]`);
     if (btn) {
         btn.classList.add('active');
+        console.log('Botón activado:', tabName);
+    } else {
+        console.error('No se encontró el botón para:', tabName);
     }
     
-    // Renderizar datos según la pestaña
     switch(tabName) {
         case 'stats':
-            if (window.playerStats) {
-                loadStatsTab();
-            } else {
-                console.warn('⚠️ PlayerStats no disponible para cargar estadísticas');
-            }
+            console.log('Cargando estadísticas...');
+            loadStatsTab();
             break;
         case 'cards':
-            if (window.playerStats) {
-                loadCardsTab();
-            } else {
-                console.warn('⚠️ PlayerStats no disponible para cargar cartas');
-            }
+            console.log('Cargando cartas...');
+            loadCardsTab();
             break;
         case 'comodines':
-            if (window.playerStats) {
-                loadComodinesTab();
-            } else {
-                console.warn('⚠️ PlayerStats no disponible para cargar comodines');
-            }
+            console.log('Cargando comodines...');
+            loadComodinesTab();
             break;
         case 'achievements':
-            if (window.playerStats) {
-                loadAchievementsTab();
-            } else {
-                console.warn('⚠️ PlayerStats no disponible para cargar logros');
-            }
+            console.log('Cargando logros...');
+            loadAchievementsTab();
             break;
         default:
-            console.warn('⚠️ Pestaña desconocida:', tabName);
+            console.error('Tab desconocido:', tabName);
     }
 }
-
-// Hacer la función global
 window.showTab = showTab;
 
-// Cargar estadísticas al iniciar
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Iniciando carga del perfil...');
+    if (typeof STATS_CONFIG === 'undefined') {
+        console.error('STATS_CONFIG no está disponible');
+        return;
+    }
     
     try {
         await waitForAuthAndStats();
-        console.log('✅ Autenticación y estadísticas listas');
         
-        // Configurar eventos de las pestañas
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function(e) {
-                e.preventDefault();
-                const tabName = this.getAttribute('onclick').match(/showTab\(([^)]+)\)/)[1];
-                showTab(tabName);
-            });
-        });
-        
-        // Cargar la pestaña de estadísticas por defecto
-        showTab('stats');
-        
-        console.log('✅ Perfil cargado correctamente');
+        setTimeout(() => {
+            showTab('stats');
+        }, 100);
     } catch (error) {
-        console.error('❌ Error cargando perfil:', error);
+        console.error('Error durante la inicialización:', error);
     }
 });
 
 function loadStatsTab() {
-    if (!window.playerStats) {
-        console.warn('PlayerStats no está disponible');
-        return;
-    }
+    const stats = window.playerStats || {};
     
-    const stats = window.playerStats;
+    const level = stats.getPlayerLevel ? stats.getPlayerLevel() : { name: 'Novato', level: 'novato' };
     
-    // Obtener nivel del jugador
-    const level = stats.getPlayerLevel ? stats.getPlayerLevel() : { name: 'Novato', level: 1 };
-    
-    // Actualizar información del jugador
-    const playerNameElement = document.getElementById('playerName');
-    const playerLevelElement = document.getElementById('playerLevel');
-    
-    if (playerNameElement) {
-        playerNameElement.textContent = `Truquero ${level.name}`;
-    }
-    if (playerLevelElement) {
-        playerLevelElement.textContent = `Nivel ${level.level} - ${level.name}`;
-    }
-    
-    // Actualizar estadísticas básicas
-    const statElements = {
-        gamesPlayed: stats.gamesPlayed || 0,
-        gamesWon: stats.gamesWon || 0,
-        chicosWon: stats.chicosWon || 0,
-        envidosWon: stats.envidosWon || 0,
-        trucosWon: stats.trucosWon || 0,
-        floresCantadas: stats.floresCantadas || 0,
-        avgTime: `${Math.round(stats.avgTimePerTurn || 0)}s`,
-        comodinesUsados: stats.comodinesUsados || 0
+    const elements = {
+        playerName: document.getElementById('playerName'),
+        playerLevel: document.getElementById('playerLevel'),
+        gamesPlayed: document.getElementById('gamesPlayed'),
+        gamesWon: document.getElementById('gamesWon'),
+        chicosWon: document.getElementById('chicosWon'),
+        envidosWon: document.getElementById('envidosWon'),
+        trucosWon: document.getElementById('trucosWon'),
+        floresCantadas: document.getElementById('floresCantadas'),
+        avgTime: document.getElementById('avgTime'),
+        comodinesUsados: document.getElementById('comodinesUsados'),
+        winPercentage: document.getElementById('winPercentage'),
+        gamesProgress: document.getElementById('gamesProgress'),
+        winRate: document.getElementById('winRate'),
+        chicosProgress: document.getElementById('chicosProgress'),
+        envidosProgress: document.getElementById('envidosProgress'),
+        trucosProgress: document.getElementById('trucosProgress'),
+        floresProgress: document.getElementById('floresProgress'),
+        timeProgress: document.getElementById('timeProgress'),
+        comodinesProgress: document.getElementById('comodinesProgress')
     };
     
-    // Actualizar cada elemento de estadística
-    Object.entries(statElements).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value;
-        }
-    });
+    if (elements.playerName) elements.playerName.textContent = `Truquero ${level.name}`;
+    if (elements.playerLevel) elements.playerLevel.textContent = `Nivel ${level.level} - ${level.name}`;
+    if (elements.gamesPlayed) elements.gamesPlayed.textContent = stats.gamesPlayed || 0;
+    if (elements.gamesWon) elements.gamesWon.textContent = stats.gamesWon || 0;
+    if (elements.chicosWon) elements.chicosWon.textContent = stats.chicosWon || 0;
+    if (elements.envidosWon) elements.envidosWon.textContent = stats.envidosWon || 0;
+    if (elements.trucosWon) elements.trucosWon.textContent = stats.trucosWon || 0;
+    if (elements.floresCantadas) elements.floresCantadas.textContent = stats.floresCantadas || 0;
+    if (elements.avgTime) elements.avgTime.textContent = `${Math.round(stats.avgTimePerTurn || 0)}s`;
+    if (elements.comodinesUsados) elements.comodinesUsados.textContent = stats.comodinesUsados || 0;
     
-    // Calcular y mostrar tasa de victoria
     const winRate = (stats.gamesPlayed > 0) ? ((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
-    const winPercentageElement = document.getElementById('winPercentage');
-    if (winPercentageElement) {
-        winPercentageElement.textContent = `${Math.round(winRate)}%`;
-    }
+    if (elements.winPercentage) elements.winPercentage.textContent = `${Math.round(winRate)}%`;
     
-    // Actualizar barras de progreso
-    const progressBars = {
-        gamesProgress: Math.min(((stats.gamesPlayed || 0) / 50) * 100, 100),
-        winRate: winRate,
-        chicosProgress: Math.min(((stats.chicosWon || 0) / 10) * 100, 100),
-        envidosProgress: Math.min(((stats.envidosWon || 0) / 20) * 100, 100),
-        trucosProgress: Math.min(((stats.trucosWon || 0) / 30) * 100, 100),
-        floresProgress: Math.min(((stats.floresCantadas || 0) / 10) * 100, 100),
-        timeProgress: Math.min((15 - (stats.avgTimePerTurn || 0)) / 15 * 100, 100),
-        comodinesProgress: Math.min(((stats.comodinesUsados || 0) / 20) * 100, 100)
-    };
-    
-    // Aplicar las barras de progreso
-    Object.entries(progressBars).forEach(([id, percentage]) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.style.width = `${Math.max(0, percentage)}%`;
-        }
-    });
-    
-    console.log('✅ Estadísticas cargadas correctamente:', stats);
+    if (elements.gamesProgress) elements.gamesProgress.style.width = `${Math.min(((stats.gamesPlayed || 0) / 50) * 100, 100)}%`;
+    if (elements.winRate) elements.winRate.style.width = `${winRate}%`;
+    if (elements.chicosProgress) elements.chicosProgress.style.width = `${Math.min(((stats.chicosWon || 0) / 10) * 100, 100)}%`;
+    if (elements.envidosProgress) elements.envidosProgress.style.width = `${Math.min(((stats.envidosWon || 0) / 20) * 100, 100)}%`;
+    if (elements.trucosProgress) elements.trucosProgress.style.width = `${Math.min(((stats.trucosWon || 0) / 30) * 100, 100)}%`;
+    if (elements.floresProgress) elements.floresProgress.style.width = `${Math.min(((stats.floresCantadas || 0) / 10) * 100, 100)}%`;
+    if (elements.timeProgress) elements.timeProgress.style.width = `${Math.min((15 - (stats.avgTimePerTurn || 0)) / 15 * 100, 100)}%`;
+    if (elements.comodinesProgress) elements.comodinesProgress.style.width = `${Math.min(((stats.comodinesUsados || 0) / 20) * 100, 100)}%`;
 }
 
 function loadCardsTab() {
     if (!window.playerStats) return;
+    
     const topCards = window.playerStats.getTopCards ? window.playerStats.getTopCards(8) : [];
     const effectiveCards = window.playerStats.getMostEffectiveCards ? window.playerStats.getMostEffectiveCards(8) : [];
     const envidoCards = window.playerStats.getTopEnvidoCards ? window.playerStats.getTopEnvidoCards(8) : [];
+    
     const topCardsDiv = document.getElementById('topCards');
     if (topCardsDiv) {
         topCardsDiv.innerHTML = topCards.length
             ? topCards.map(card => `<div class="card-stat"><div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div><div class="card-info"><h4>${getCardDisplayName(card.card)}</h4><p>Jugada ${card.count} veces</p></div></div>`).join('')
-            : '<div>No hay datos de cartas jugadas.</div>';
+            : '<div style="text-align: center; padding: 20px; color: #666;">No hay datos de cartas jugadas.</div>';
     }
+    
     const effectiveCardsDiv = document.getElementById('effectiveCards');
     if (effectiveCardsDiv) {
         effectiveCardsDiv.innerHTML = effectiveCards.length
             ? effectiveCards.map(card => `<div class="card-stat"><div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div><div class="card-info"><h4>${getCardDisplayName(card.card)}</h4><p>${card.wins}/${card.played} victorias (${Math.round(card.ratio * 100)}%)</p></div></div>`).join('')
-            : '<div>No hay datos de cartas efectivas.</div>';
+            : '<div style="text-align: center; padding: 20px; color: #666;">No hay datos de cartas efectivas.</div>';
     }
+    
     const envidoCardsDiv = document.getElementById('envidoCards');
     if (envidoCardsDiv) {
         envidoCardsDiv.innerHTML = envidoCards.length
             ? envidoCards.map(card => `<div class="card-stat"><div class="card-image" style="background-image: url('./resources/cartas/${card.card.replace(/([0-9]+)([a-z]+)/, '$1de$2')}.png')"></div><div class="card-info"><h4>${getCardDisplayName(card.card)}</h4><p>Usada ${card.count} veces en envido</p></div></div>`).join('')
-            : '<div>No hay datos de cartas de envido.</div>';
+            : '<div style="text-align: center; padding: 20px; color: #666;">No hay datos de cartas de envido.</div>';
     }
 }
 
 function loadComodinesTab() {
     if (!window.playerStats) return;
+    
     const allComodines = getAllComodinesList();
     const comodinesGrid = document.getElementById('comodinesGrid');
     if (comodinesGrid) {
         comodinesGrid.innerHTML = allComodines.map(comodin => {
-            const isUnlocked = window.playerStats.comodinesUnlocked.includes(comodin.id);
-            const timesUsed = window.playerStats.comodinesUsed[comodin.id] || 0;
+            const isUnlocked = window.playerStats.comodinesUnlocked && window.playerStats.comodinesUnlocked.includes(comodin.id);
+            const timesUsed = window.playerStats.comodinesUsed && window.playerStats.comodinesUsed[comodin.id] || 0;
             return `<div class="comodin-card-profile ${isUnlocked ? 'unlocked' : 'locked'}"><div class="comodin-header"><div class="comodin-icon">${getComodinIcon(comodin.id)}</div><div class="comodin-title"><h4>${comodin.nombre}</h4><p>${isUnlocked ? 'Desbloqueado' : 'Bloqueado'}</p></div></div><div class="comodin-desc">${comodin.desc}</div><div class="comodin-stats"><span>Usado: ${timesUsed} veces</span><span>${isUnlocked ? '✅' : '🔒'}</span></div></div>`;
         }).join('');
     }
@@ -643,11 +565,12 @@ function loadComodinesTab() {
 
 function loadAchievementsTab() {
     if (!window.playerStats) return;
+    
     const achievementsList = document.getElementById('achievementsList');
     const allAchievements = getAllAchievementsList();
     if (achievementsList) {
         achievementsList.innerHTML = allAchievements.map(achievement => {
-            const isUnlocked = window.playerStats.achievements[achievement.id]?.unlocked || false;
+            const isUnlocked = window.playerStats.achievements && window.playerStats.achievements[achievement.id]?.unlocked || false;
             return `<div class="achievement ${isUnlocked ? 'unlocked' : ''}"><div class="achievement-icon">${achievement.icon}</div><div class="achievement-info"><h4>${achievement.name}</h4><p>${achievement.desc}</p></div></div>`;
         }).join('');
     }
@@ -759,59 +682,4 @@ style.textContent = `
     to { transform: translateX(100%); opacity: 0; }
 }
 `;
-document.head.appendChild(style);
-
-// Funciones globales para manejo de estadísticas
-window.exportStats = function() {
-    if (StatsUtils.exportStats()) {
-        alert('✅ Estadísticas exportadas correctamente');
-    } else {
-        alert('❌ Error exportando estadísticas');
-    }
-};
-
-window.importStats = function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            StatsUtils.importStats(file)
-                .then(() => {
-                    alert('✅ Estadísticas importadas correctamente');
-                    location.reload();
-                })
-                .catch(error => {
-                    alert('❌ Error importando estadísticas: ' + error.message);
-                });
-        }
-    };
-    input.click();
-};
-
-window.clearStats = function() {
-    if (confirm('¿Estás seguro de que quieres eliminar todas las estadísticas? Esta acción no se puede deshacer.')) {
-        if (StatsUtils.clearStats()) {
-            alert('✅ Estadísticas eliminadas correctamente');
-            location.reload();
-        } else {
-            alert('❌ Error eliminando estadísticas');
-        }
-    }
-}; 
-
-// Función para refrescar estadísticas
-window.refreshStats = function() {
-    if (window.playerStats) {
-        window.playerStats.refreshStats().then(() => {
-            loadStatsTab();
-            alert('✅ Estadísticas actualizadas');
-        }).catch(error => {
-            console.error('❌ Error refrescando estadísticas:', error);
-            alert('❌ Error actualizando estadísticas');
-        });
-    } else {
-        alert('❌ No hay estadísticas disponibles para refrescar');
-    }
-}; 
+document.head.appendChild(style); 

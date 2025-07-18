@@ -5,6 +5,11 @@ const GAME_CONFIG = {
     allowFlor: true
 };
 
+const nivelTruco = 0;
+const nivelEnvido = 0;
+const personaTruco = 0;
+const personaEnvido = 0;
+
 // Sistema de carga diferida para recursos no esenciales
 let lazyLoadComplete = false;
 const lazyLoadQueue = [];
